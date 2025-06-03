@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Calendar, Clock, MapPin, DollarSign, Plus, Star, User, Phone } from "lucide-react"
+import { Calendar, Clock, MapPin, DollarSign, Plus, Star, User, Phone, Eye } from "lucide-react"
 import { format } from "date-fns"
 import { vi } from "date-fns/locale"
 import Link from "next/link"
@@ -209,6 +209,13 @@ export default function UserDashboard() {
                             </p>
                           </div>
                         )}
+
+                        <Button asChild variant="outline" size="sm">
+                          <Link href={`/user/my-bookings/${booking.id}`}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            Xem chi tiết
+                          </Link>
+                        </Button>
                       </CardContent>
                     </Card>
                   ))}
