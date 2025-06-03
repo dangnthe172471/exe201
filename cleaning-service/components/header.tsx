@@ -62,6 +62,9 @@ export default function Header() {
             <Link href="/services" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
               Dịch Vụ
             </Link>
+            <Link href="/news" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
+              Tin Tức
+            </Link>
             <Link href="/about" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
               Về Chúng Tôi
             </Link>
@@ -117,6 +120,9 @@ export default function Header() {
               </Link>
               <Link href="/services" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
                 Dịch Vụ
+              </Link>
+              <Link href="/news" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
+                Tin Tức
               </Link>
               <Link href="/about" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
                 Về Chúng Tôi

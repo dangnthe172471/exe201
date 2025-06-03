@@ -50,54 +50,61 @@ export default function AboutPage() {
 
   const team = [
     {
-      name: "Nguyễn Văn An",
-      position: "CEO & Founder",
+      name: "Nguyễn Danh Huấn",
+      position: "CEO",
       avatar: "👨‍💼",
-      description: "10+ năm kinh nghiệm trong lĩnh vực dịch vụ gia đình",
+      description: "Lãnh đạo chiến lược, điều hành và phát triển toàn diện công ty."
     },
     {
-      name: "Trần Thị Bình",
-      position: "Giám đốc Vận hành",
+      name: "Nguyễn Tiến Đăng",
+      position: "CFO",
+      avatar: "👨‍💼",
+      description: "Quản lý ngân sách, tư vấn tài chính và định hướng đầu tư."
+    },
+    {
+      name: "Nguyễn Tùng Lâm",
+      position: "CTO",
+      avatar: "👨‍💻",
+      description: "Xây dựng chiến lược công nghệ và quản lý đội ngũ kỹ thuật."
+    },
+    {
+      name: "Đỗ Thanh Kim Hiền",
+      position: "COO",
       avatar: "👩‍💼",
-      description: "Chuyên gia quản lý chất lượng dịch vụ",
+      description: "Điều phối vận hành, giám sát quy trình và triển khai sản phẩm."
     },
     {
-      name: "Lê Minh Cường",
-      position: "Trưởng phòng Đào tạo",
-      avatar: "👨‍🏫",
-      description: "Đào tạo và phát triển đội ngũ nhân viên",
+      name: "Trần Thảo Linh",
+      position: "CMO",
+      avatar: "👩‍🎨",
+      description: "Xây dựng thương hiệu, quản lý truyền thông và chiến lược marketing."
     },
     {
-      name: "Phạm Thu Dung",
-      position: "Giám đốc Khách hàng",
-      avatar: "👩‍💻",
-      description: "Chăm sóc và hỗ trợ khách hàng 24/7",
-    },
+      name: "Trương Vĩnh Hào",
+      position: "CIO",
+      avatar: "👨‍💻",
+      description: "Phát triển hạ tầng CNTT và dẫn dắt chuyển đổi số."
+    }
   ]
 
   const milestones = [
     {
-      year: "2020",
+      year: "2025",
       title: "Thành lập CareU",
-      description: "Bắt đầu với đội ngũ 10 nhân viên tại TP.HCM",
+      description: "Bắt đầu với đội ngũ 6 nhân viên tại Hòa Lạc",
     },
     {
-      year: "2021",
-      title: "Mở rộng ra Hà Nội",
-      description: "Phục vụ hơn 1,000 khách hàng trong năm đầu",
-    },
-    {
-      year: "2022",
+      year: "2025",
       title: "Ra mắt ứng dụng mobile",
       description: "Đạt 10,000+ lượt tải xuống trong 6 tháng",
     },
     {
-      year: "2023",
+      year: "2026",
       title: "Mở rộng toàn quốc",
       description: "Có mặt tại 10 tỉnh thành lớn",
     },
     {
-      year: "2024",
+      year: "2027",
       title: "Đạt 10,000+ khách hàng",
       description: "Trở thành thương hiệu dọn vệ sinh hàng đầu Việt Nam",
     },
@@ -265,7 +272,7 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-8 justify-items-center">
             {team.map((member, index) => (
               <Card
                 key={index}
@@ -309,7 +316,7 @@ export default function AboutPage() {
                 <MapPin className="w-8 h-8" />
               </div>
               <h3 className="text-lg font-semibold mb-2">Địa chỉ</h3>
-              <p className="opacity-90">123 Nguyễn Văn Linh, Q.7, TP.HCM</p>
+              <p className="opacity-90">Hòa Lạc</p>
             </div>
           </div>
 
