@@ -11,11 +11,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarDays, Clock, CheckCircle, Heart, Sparkles } from "lucide-react"
+import { CalendarDays, Clock, CheckCircle, Heart, Sparkles, MapPin } from "lucide-react"
 import { format } from "date-fns"
 import { vi } from "date-fns/locale"
 import { useRouter } from "next/navigation"
 import Header from "@/components/header"
+import MapSelector from "@/components/map-selector"
+import type { GeocodingResult } from "@/lib/geocode"
 
 export default function BookingPage() {
   const [user, setUser] = useState<any>(null)
@@ -24,11 +26,14 @@ export default function BookingPage() {
     serviceType: "",
     timeSlot: "",
     address: "",
+    detailedAddress: "",
     area: "",
     notes: "",
     contactName: "",
     contactPhone: "",
   })
+  const [currentLocation, setCurrentLocation] = useState<GeocodingResult | null>(null)
+  const [locationError, setLocationError] = useState<string | null>(null)
   const [totalPrice, setTotalPrice] = useState(0)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -108,8 +113,27 @@ export default function BookingPage() {
     }
   }
 
+  const handleLocationSelect = (location: GeocodingResult) => {
+    setCurrentLocation(location)
+    // Chỉ fill quận/huyện - tỉnh/thành phố
+    handleInputChange("address", location.address)
+    setLocationError(null)
+  }
+
   const handleInputChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  // Tạo địa chỉ đầy đủ từ detailedAddress + address
+  const getFullAddress = () => {
+    if (formData.detailedAddress && formData.address) {
+      return `${formData.detailedAddress}, ${formData.address}`
+    } else if (formData.address) {
+      return formData.address
+    } else if (formData.detailedAddress) {
+      return formData.detailedAddress
+    }
+    return ""
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -121,14 +145,19 @@ export default function BookingPage() {
     // Simulate API call
     setTimeout(() => {
       const bookings = JSON.parse(localStorage.getItem("bookings") || "[]")
+      const fullAddress = getFullAddress()
+
       const newBooking = {
         id: Date.now(),
         userId: user.id,
         ...formData,
+        // Địa chỉ cuối cùng là detailedAddress + address
+        address: fullAddress,
         date: selectedDate?.toISOString(),
         totalPrice,
         status: "pending",
         createdAt: new Date().toISOString(),
+        coordinates: currentLocation?.coordinates || null,
       }
       bookings.push(newBooking)
       localStorage.setItem("bookings", JSON.stringify(bookings))
@@ -293,19 +322,80 @@ export default function BookingPage() {
                   </Select>
                 </div>
 
-                {/* Address */}
-                <div className="space-y-3">
-                  <Label htmlFor="address" className="text-sm font-medium">
-                    Địa chỉ thực hiện
-                  </Label>
-                  <Input
-                    id="address"
-                    placeholder="Nhập địa chỉ chi tiết"
-                    value={formData.address}
-                    onChange={(e) => handleInputChange("address", e.target.value)}
-                    required
-                    className="h-12 border-gray-300 focus:border-blue-500"
-                  />
+                {/* Address Section */}
+                <div className="space-y-4">
+                  <Label className="text-sm font-medium">Địa chỉ thực hiện</Label>
+
+                  {/* Map Selector */}
+                  <div className="space-y-3">
+                    <MapSelector onLocationSelect={handleLocationSelect} currentLocation={currentLocation} />
+
+                    {/* Location result */}
+                    {currentLocation && (
+                      <div className="bg-blue-50 p-3 rounded-md border border-blue-100">
+                        <div className="flex items-start">
+                          <MapPin className="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" />
+                          <div>
+                            <p className="font-medium text-blue-700">Vị trí đã chọn</p>
+                            <p className="text-sm text-blue-600">{currentLocation.address}</p>
+                            <p className="text-xs text-blue-500 mt-1">
+                              Tọa độ: {currentLocation.coordinates.lat.toFixed(6)},{" "}
+                              {currentLocation.coordinates.lng.toFixed(6)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Location error */}
+                    {locationError && (
+                      <div className="bg-red-50 p-3 rounded-md border border-red-100">
+                        <p className="text-red-600 text-sm">{locationError}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* District/City Input - Đặt sau */}
+                  <div className="space-y-3">
+                    <Label htmlFor="address" className="text-sm font-medium">
+                      Quận/Huyện - Tỉnh/Thành phố
+                    </Label>
+                    <Input
+                      id="address"
+                      placeholder="Ví dụ: Quận Ba Đình, Hà Nội"
+                      value={formData.address}
+                      onChange={(e) => handleInputChange("address", e.target.value)}
+                      className="h-12 border-gray-300 focus:border-blue-500"
+                      required
+                    />
+                  </div>
+
+                  {/* Detailed Address Input - Đặt trước */}
+                  <div className="space-y-3">
+                    <Label htmlFor="detailedAddress" className="text-sm font-medium">
+                      Địa chỉ chi tiết
+                    </Label>
+                    <Input
+                      id="detailedAddress"
+                      placeholder="Số nhà, tên đường, phường/xã... (Ví dụ: 123 Phố Điện Biên Phủ, Phường Điện Biên)"
+                      value={formData.detailedAddress}
+                      onChange={(e) => handleInputChange("detailedAddress", e.target.value)}
+                      className="h-12 border-gray-300 focus:border-blue-500"
+                      required
+                    />
+                  </div>
+
+                  {/* Address Preview */}
+                  {(formData.detailedAddress || formData.address) && (
+                    <div className="bg-green-50 p-3 rounded-md border border-green-100">
+                      <p className="text-sm font-medium text-green-700 mb-1">Địa chỉ đầy đủ:</p>
+                      <p className="text-green-600">{getFullAddress()}</p>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-gray-500">
+                    Địa chỉ cuối cùng sẽ là: <strong>Địa chỉ chi tiết + Quận/Huyện - Tỉnh/Thành phố</strong>
+                  </p>
                 </div>
 
                 {/* Contact Info */}
@@ -370,7 +460,9 @@ export default function BookingPage() {
                 <Button
                   type="submit"
                   className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-lg"
-                  disabled={loading || !selectedDate || !formData.serviceType}
+                  disabled={
+                    loading || !selectedDate || !formData.serviceType || !formData.detailedAddress || !formData.address
+                  }
                 >
                   {loading ? (
                     "Đang xử lý..."
