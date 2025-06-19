@@ -22,31 +22,226 @@ export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const router = useRouter()
+  const [bills, setBills] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
 
   useEffect(() => {
-    const currentUser = localStorage.getItem("currentUser")
-    if (!currentUser) {
-      router.push("/login")
-      return
-    }
+    try {
+      const currentUser = localStorage.getItem("currentUser")
+      console.log("Current user from localStorage:", currentUser) // Debug log
 
-    const userData = JSON.parse(currentUser)
-    if (userData.role !== "admin") {
-      router.push("/")
-      return
-    }
+      if (!currentUser) {
+        console.log("No user found, redirecting to login")
+        router.push("/login")
+        return
+      }
 
-    setUser(userData)
-    loadData()
+      const userData = JSON.parse(currentUser)
+      console.log("User data:", userData) // Debug log
+
+      if (userData.role !== "admin") {
+        console.log("User is not admin, redirecting to home")
+        setError(`Bạn không có quyền truy cập. Role hiện tại: ${userData.role}`)
+        setTimeout(() => router.push("/"), 2000)
+        return
+      }
+
+      setUser(userData)
+      loadData()
+      setLoading(false)
+
+      // Initialize fake bills if not exists
+      const existingBills = localStorage.getItem("bills")
+      if (!existingBills) {
+        const fakeBills = [
+          {
+            id: 1,
+            date: "2025-05-29",
+            customerEmail: "nguyenductanmdsl@gmail.com",
+            amount: 119000,
+            billId: "00001",
+            status: "paid",
+          },
+          {
+            id: 2,
+            date: "2025-05-30",
+            customerEmail: "namkhanhdz123@gmail.com",
+            amount: 119000,
+            billId: "00002",
+            status: "paid",
+          },
+          {
+            id: 3,
+            date: "2025-05-31",
+            customerEmail: "quy77889@gmail.com",
+            amount: 149000,
+            billId: "00003",
+            status: "paid",
+          },
+          {
+            id: 4,
+            date: "2025-06-01",
+            customerEmail: "nguyenquangyinhzz@gmail.com",
+            amount: 119000,
+            billId: "00004",
+            status: "paid",
+          },
+          {
+            id: 5,
+            date: "2025-06-02",
+            customerEmail: "huynhthaikhang@gmail.com",
+            amount: 119000,
+            billId: "00005",
+            status: "paid",
+          },
+          {
+            id: 6,
+            date: "2025-06-03",
+            customerEmail: "dat8948@gmail.com",
+            amount: 119000,
+            billId: "00006",
+            status: "paid",
+          },
+          {
+            id: 7,
+            date: "2025-06-07",
+            customerEmail: "thanhd2006@gmail.com",
+            amount: 149000,
+            billId: "00007",
+            status: "paid",
+          },
+          {
+            id: 8,
+            date: "2025-06-07",
+            customerEmail: "hinhvonkuv1987az@gmail.com",
+            amount: 149000,
+            billId: "00008",
+            status: "paid",
+          },
+          {
+            id: 9,
+            date: "2025-06-08",
+            customerEmail: "kingppfa2006@gmail.com",
+            amount: 119000,
+            billId: "00009",
+            status: "paid",
+          },
+          {
+            id: 10,
+            date: "2025-06-08",
+            customerEmail: "vonhatduy07082k6@gmail.com",
+            amount: 149000,
+            billId: "00010",
+            status: "paid",
+          },
+          {
+            id: 11,
+            date: "2025-06-08",
+            customerEmail: "tiennhien2k6@gmail.com",
+            amount: 149000,
+            billId: "00011",
+            status: "paid",
+          },
+          {
+            id: 12,
+            date: "2025-06-09",
+            customerEmail: "ngkhanh2002zz@gmail.com",
+            amount: 119000,
+            billId: "00012",
+            status: "paid",
+          },
+          {
+            id: 13,
+            date: "2025-06-10",
+            customerEmail: "vanlinh2k666@gmail.com",
+            amount: 149000,
+            billId: "00013",
+            status: "paid",
+          },
+          {
+            id: 14,
+            date: "2025-06-11",
+            customerEmail: "ngthaoguyen77@gmail.com",
+            amount: 119000,
+            billId: "00014",
+            status: "paid",
+          },
+          {
+            id: 15,
+            date: "2025-06-14",
+            customerEmail: "vnaxkonchiem111@gmail.com",
+            amount: 149000,
+            billId: "00015",
+            status: "paid",
+          },
+          {
+            id: 16,
+            date: "2025-06-14",
+            customerEmail: "thangnhgien1964@gmail.com",
+            amount: 119000,
+            billId: "00016",
+            status: "paid",
+          },
+          {
+            id: 17,
+            date: "2025-06-14",
+            customerEmail: "vanzzlinh@gmail.com",
+            amount: 149000,
+            billId: "00017",
+            status: "paid",
+          },
+          {
+            id: 18,
+            date: "2025-06-15",
+            customerEmail: "holyalone123@gmail.com",
+            amount: 119000,
+            billId: "00018",
+            status: "paid",
+          },
+          {
+            id: 19,
+            date: "2025-06-15",
+            customerEmail: "tandat193@gmail.com",
+            amount: 278000,
+            billId: "00019",
+            status: "paid",
+          },
+          {
+            id: 20,
+            date: "2025-06-15",
+            customerEmail: "vongvinhphuc1808@gmail.com",
+            amount: 149000,
+            billId: "00020",
+            status: "paid",
+          },
+          {
+            id: 21,
+            date: "2025-06-18",
+            customerEmail: "nhkhiem12@gmail.com",
+            amount: 149000,
+            billId: "00021",
+            status: "paid",
+          },
+        ]
+        localStorage.setItem("bills", JSON.stringify(fakeBills))
+      }
+    } catch (err) {
+      console.error("Error in useEffect:", err)
+      setError("Có lỗi xảy ra khi tải dữ liệu")
+      setLoading(false)
+    }
   }, [router])
 
   const loadData = () => {
     const allUsers = JSON.parse(localStorage.getItem("users") || "[]")
     const allBookings = JSON.parse(localStorage.getItem("bookings") || "[]")
+    const allBills = JSON.parse(localStorage.getItem("bills") || "[]")
 
     setUsers(allUsers.filter((u: any) => u.role === "user"))
     setCleaners(allUsers.filter((u: any) => u.role === "cleaner"))
     setBookings(allBookings)
+    setBills(allBills)
   }
 
   const updateCleanerStatus = (cleanerId: number, newStatus: string) => {
@@ -109,8 +304,37 @@ export default function AdminDashboard() {
 
   const totalRevenue = bookings.filter((b) => b.status === "completed").reduce((sum, b) => sum + (b.totalPrice || 0), 0)
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-lg text-gray-600">Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>
+          <Button onClick={() => router.push("/login")}>Đăng nhập lại</Button>
+        </div>
+      </div>
+    )
+  }
+
   if (!user) {
-    return <div>Đang tải...</div>
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg text-gray-600 mb-4">Không tìm thấy thông tin người dùng</p>
+          <Button onClick={() => router.push("/login")}>Đăng nhập</Button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -174,6 +398,18 @@ export default function AdminDashboard() {
                 </div>
               </CardContent>
             </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Tổng hóa đơn</p>
+                    <p className="text-2xl font-bold">{bills.length}</p>
+                  </div>
+                  <DollarSign className="w-8 h-8 text-orange-600" />
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           <Tabs defaultValue="bookings" className="space-y-6">
@@ -182,6 +418,7 @@ export default function AdminDashboard() {
               <TabsTrigger value="cleaners">Nhân Viên</TabsTrigger>
               <TabsTrigger value="customers">Khách Hàng</TabsTrigger>
               <TabsTrigger value="analytics">Thống Kê</TabsTrigger>
+              <TabsTrigger value="bills">Hóa Đơn</TabsTrigger>
             </TabsList>
 
             <TabsContent value="bookings" className="space-y-6">
@@ -403,6 +640,39 @@ export default function AdminDashboard() {
                   </CardContent>
                 </Card>
               </div>
+            </TabsContent>
+
+            <TabsContent value="bills" className="space-y-6">
+              <h2 className="text-2xl font-bold">Quản Lý Hóa Đơn</h2>
+
+              <Card>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Ngày</TableHead>
+                      <TableHead>Email khách hàng</TableHead>
+                      <TableHead>Số tiền</TableHead>
+                      <TableHead>Mã hóa đơn</TableHead>
+                      <TableHead>Trạng thái</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {bills.map((bill) => (
+                      <TableRow key={bill.id}>
+                        <TableCell>{format(new Date(bill.date), "dd/MM/yyyy", { locale: vi })}</TableCell>
+                        <TableCell>{bill.customerEmail}</TableCell>
+                        <TableCell>{bill.amount.toLocaleString("vi-VN")}đ</TableCell>
+                        <TableCell>#{bill.billId}</TableCell>
+                        <TableCell>
+                          <Badge variant={bill.status === "paid" ? "default" : "secondary"}>
+                            {bill.status === "paid" ? "Đã thanh toán" : "Chưa thanh toán"}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>
