@@ -96,6 +96,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddSingleton<JWTConfig>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddScoped<INewsService, NewsService>();
 
 var app = builder.Build();
 
