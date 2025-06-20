@@ -122,5 +122,199 @@ namespace Exe201_API.Services
 
             return stats;
         }
+
+        // Cleaner methods
+        public async Task<IEnumerable<BookingDetailDto>> GetAvailableJobsAsync()
+        {
+            return await _context.Bookings
+                .Where(b => b.Status.ToLower() == "pending" && b.CleanerId == null)
+                .Include(b => b.Service)
+                .Include(b => b.AreaSize)
+                .Include(b => b.TimeSlot)
+                .Include(b => b.User)
+                .OrderBy(b => b.BookingDate)
+                .Select(b => new BookingDetailDto
+                {
+                    Id = b.Id,
+                    ServiceName = b.Service.Name,
+                    AreaSize = b.AreaSize.Name,
+                    TimeSlot = b.TimeSlot != null ? b.TimeSlot.TimeRange : "Chưa xác định",
+                    BookingDate = b.BookingDate,
+                    Address = b.Address,
+                    ContactName = b.ContactName,
+                    ContactPhone = b.ContactPhone,
+                    Notes = b.Notes,
+                    TotalPrice = b.TotalPrice,
+                    Status = b.Status,
+                    CleanerId = b.CleanerId,
+                    CleanerName = b.Cleaner != null ? b.Cleaner.Name : null,
+                    CreatedAt = b.CreatedAt ?? DateTime.UtcNow,
+                    UpdatedAt = b.UpdatedAt
+                }).ToListAsync();
+        }
+
+        public async Task<IEnumerable<BookingDetailDto>> GetCleanerJobsAsync(int cleanerId, string? status)
+        {
+            var query = _context.Bookings
+                .Where(b => b.CleanerId == cleanerId);
+            
+            if (!string.IsNullOrEmpty(status) && status.ToLower() != "all")
+            {
+                query = query.Where(b => b.Status.ToLower() == status.ToLower());
+            }
+
+            return await query
+                .Include(b => b.Service)
+                .Include(b => b.AreaSize)
+                .Include(b => b.TimeSlot)
+                .Include(b => b.User)
+                .Include(b => b.Cleaner)
+                .OrderByDescending(b => b.CreatedAt)
+                .Select(b => new BookingDetailDto
+                {
+                    Id = b.Id,
+                    ServiceName = b.Service.Name,
+                    AreaSize = b.AreaSize.Name,
+                    TimeSlot = b.TimeSlot != null ? b.TimeSlot.TimeRange : "Chưa xác định",
+                    BookingDate = b.BookingDate,
+                    Address = b.Address,
+                    ContactName = b.ContactName,
+                    ContactPhone = b.ContactPhone,
+                    Notes = b.Notes,
+                    TotalPrice = b.TotalPrice,
+                    Status = b.Status,
+                    CleanerId = b.CleanerId,
+                    CleanerName = b.Cleaner != null ? b.Cleaner.Name : null,
+                    CreatedAt = b.CreatedAt ?? DateTime.UtcNow,
+                    UpdatedAt = b.UpdatedAt
+                }).ToListAsync();
+        }
+
+        public async Task<BookingDetailDto> AssignCleanerToBookingAsync(int bookingId, int cleanerId)
+        {
+            var booking = await _context.Bookings
+                .Include(b => b.Service)
+                .Include(b => b.AreaSize)
+                .Include(b => b.TimeSlot)
+                .Include(b => b.User)
+                .Include(b => b.Cleaner)
+                .FirstOrDefaultAsync(b => b.Id == bookingId);
+
+            if (booking == null)
+                throw new ArgumentException("Không tìm thấy booking");
+
+            if (booking.Status.ToLower() != "pending")
+                throw new ArgumentException("Booking này không thể được assign");
+
+            if (booking.CleanerId != null)
+                throw new ArgumentException("Booking này đã được assign cho cleaner khác");
+
+            var cleaner = await _context.Users.FindAsync(cleanerId);
+            if (cleaner == null)
+                throw new ArgumentException("Không tìm thấy cleaner");
+
+            booking.CleanerId = cleanerId;
+            booking.Status = "confirmed";
+            booking.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return new BookingDetailDto
+            {
+                Id = booking.Id,
+                ServiceName = booking.Service.Name,
+                AreaSize = booking.AreaSize.Name,
+                TimeSlot = booking.TimeSlot != null ? booking.TimeSlot.TimeRange : "Chưa xác định",
+                BookingDate = booking.BookingDate,
+                Address = booking.Address,
+                ContactName = booking.ContactName,
+                ContactPhone = booking.ContactPhone,
+                Notes = booking.Notes,
+                TotalPrice = booking.TotalPrice,
+                Status = booking.Status,
+                CleanerId = booking.CleanerId,
+                CleanerName = cleaner.Name,
+                CreatedAt = booking.CreatedAt ?? DateTime.UtcNow,
+                UpdatedAt = booking.UpdatedAt
+            };
+        }
+
+        public async Task<BookingDetailDto> UpdateBookingStatusAsync(int bookingId, string status, int cleanerId)
+        {
+            var booking = await _context.Bookings
+                .Include(b => b.Service)
+                .Include(b => b.AreaSize)
+                .Include(b => b.TimeSlot)
+                .Include(b => b.User)
+                .Include(b => b.Cleaner)
+                .FirstOrDefaultAsync(b => b.Id == bookingId);
+
+            if (booking == null)
+                throw new ArgumentException("Không tìm thấy booking");
+
+            if (booking.CleanerId != cleanerId)
+                throw new UnauthorizedAccessException("Bạn không có quyền cập nhật booking này");
+
+            // Validate status transition
+            var currentStatus = booking.Status.ToLower();
+            var newStatus = status.ToLower();
+
+            if (!IsValidStatusTransition(currentStatus, newStatus))
+                throw new ArgumentException($"Không thể chuyển từ trạng thái '{currentStatus}' sang '{newStatus}'");
+
+            booking.Status = newStatus;
+            booking.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return new BookingDetailDto
+            {
+                Id = booking.Id,
+                ServiceName = booking.Service.Name,
+                AreaSize = booking.AreaSize.Name,
+                TimeSlot = booking.TimeSlot != null ? booking.TimeSlot.TimeRange : "Chưa xác định",
+                BookingDate = booking.BookingDate,
+                Address = booking.Address,
+                ContactName = booking.ContactName,
+                ContactPhone = booking.ContactPhone,
+                Notes = booking.Notes,
+                TotalPrice = booking.TotalPrice,
+                Status = booking.Status,
+                CleanerId = booking.CleanerId,
+                CleanerName = booking.Cleaner != null ? booking.Cleaner.Name : null,
+                CreatedAt = booking.CreatedAt ?? DateTime.UtcNow,
+                UpdatedAt = booking.UpdatedAt
+            };
+        }
+
+        public async Task<CleanerDashboardStatsDto> GetCleanerDashboardStatsAsync(int cleanerId)
+        {
+            var allBookings = _context.Bookings.Where(b => b.CleanerId == cleanerId);
+            var availableJobs = _context.Bookings.Where(b => b.Status.ToLower() == "pending" && b.CleanerId == null);
+
+            var stats = new CleanerDashboardStatsDto
+            {
+                AvailableJobs = await availableJobs.CountAsync(),
+                MyJobs = await allBookings.CountAsync(),
+                CompletedJobs = await allBookings.CountAsync(b => b.Status.ToLower() == "completed"),
+                TotalEarnings = await allBookings.Where(b => b.Status.ToLower() == "completed").SumAsync(b => b.TotalPrice),
+                PendingJobs = await allBookings.CountAsync(b => b.Status.ToLower() == "confirmed"),
+                InProgressJobs = await allBookings.CountAsync(b => b.Status.ToLower() == "in_progress")
+            };
+
+            return stats;
+        }
+
+        private bool IsValidStatusTransition(string currentStatus, string newStatus)
+        {
+            return (currentStatus, newStatus) switch
+            {
+                ("confirmed", "in_progress") => true,
+                ("in_progress", "completed") => true,
+                ("in_progress", "cancelled") => true,
+                ("confirmed", "cancelled") => true,
+                _ => false
+            };
+        }
     }
 } 

@@ -1,4 +1,5 @@
 using Exe201_API.DTOs;
+using Exe201_API.Models;
 using System.Threading.Tasks;
 
 namespace Exe201_API.Services
@@ -8,5 +9,6 @@ namespace Exe201_API.Services
         Task<LoginResponseDto> LoginAsync(LoginRequestDto request);
         Task<LoginResponseDto> RegisterAsync(RegisterRequestDto request);
         Task<bool> ChangePasswordAsync(ChangePasswordRequestDto request);
+        Task<User?> GetUserByIdAsync(int userId);
     }
 } 

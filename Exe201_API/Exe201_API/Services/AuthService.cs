@@ -82,5 +82,10 @@ namespace Exe201_API.Services
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<User?> GetUserByIdAsync(int userId)
+        {
+            return await _context.Users.FindAsync(userId);
+        }
     }
 } 
