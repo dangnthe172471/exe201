@@ -115,7 +115,7 @@ namespace Exe201_API.Services
             var stats = new DashboardStatsDto
             {
                 TotalBookings = await userBookings.CountAsync(),
-                PendingBookings = await userBookings.CountAsync(b => b.Status.ToLower() == "pending" || b.Status.ToLower() == "confirmed"),
+                PendingBookings = await userBookings.CountAsync(b => b.Status.ToLower() == "pending"),
                 CompletedBookings = await userBookings.CountAsync(b => b.Status.ToLower() == "completed"),
                 TotalSpent = await userBookings.Where(b => b.Status.ToLower() == "completed").SumAsync(b => b.TotalPrice)
             };

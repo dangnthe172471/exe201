@@ -83,9 +83,44 @@ namespace Exe201_API.Services
             return true;
         }
 
-        public async Task<User?> GetUserByIdAsync(int userId)
+        public async Task<UserProfileResponseDto> GetUserProfileAsync(int userId)
         {
-            return await _context.Users.FindAsync(userId);
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                throw new ArgumentException("Không tìm thấy người dùng");
+            }
+
+            return new UserProfileResponseDto
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                Phone = user.Phone,
+                Address = user.Address,
+                Role = user.Role,
+                Status = user.Status,
+                Experience = user.Experience,
+                CreatedAt = user.CreatedAt
+            };
+        }
+
+        public async Task<UserProfileResponseDto> UpdateUserProfileAsync(int userId, UserProfileUpdateRequestDto request)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                throw new ArgumentException("Không tìm thấy người dùng");
+            }
+
+            user.Name = request.Name;
+            user.Phone = request.Phone;
+            user.Address = request.Address;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return await GetUserProfileAsync(userId);
         }
     }
 } 

@@ -28,7 +28,7 @@ namespace Exe201_API.Controllers
             try
             {
                 var cleanerId = GetCurrentUserId();
-                var profile = await _authService.GetUserByIdAsync(cleanerId);
+                var profile = await _authService.GetUserProfileAsync(cleanerId);
                 
                 if (profile == null)
                 {

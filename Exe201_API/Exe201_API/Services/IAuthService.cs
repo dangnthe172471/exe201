@@ -9,6 +9,7 @@ namespace Exe201_API.Services
         Task<LoginResponseDto> LoginAsync(LoginRequestDto request);
         Task<LoginResponseDto> RegisterAsync(RegisterRequestDto request);
         Task<bool> ChangePasswordAsync(ChangePasswordRequestDto request);
-        Task<User?> GetUserByIdAsync(int userId);
+        Task<UserProfileResponseDto> GetUserProfileAsync(int userId);
+        Task<UserProfileResponseDto> UpdateUserProfileAsync(int userId, UserProfileUpdateRequestDto request);
     }
 } 
