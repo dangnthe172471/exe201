@@ -38,6 +38,12 @@ builder.Services.AddSwaggerGen(c =>
             new string[] {}
         }
     });
+    // Tell Swagger to map DateOnly to a string in 'date' format
+    c.MapType<DateOnly>(() => new Microsoft.OpenApi.Models.OpenApiSchema
+    {
+        Type = "string",
+        Format = "date"
+    });
 });
 
 builder.Services.AddDbContext<CareUContext>(options =>
