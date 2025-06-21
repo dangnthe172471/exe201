@@ -1,8 +1,11 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import Swal from "sweetalert2"
+import withReactContent from "sweetalert2-react-content"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -11,9 +14,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Heart, Eye, EyeOff, User, Briefcase } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
 import Header from "@/components/header"
+import { register } from "@/app/api/services/authApi"
+
+const MySwal = withReactContent(Swal)
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -46,38 +50,34 @@ export default function RegisterPage() {
       return
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      // Save user to localStorage (in real app, this would be API call)
-      const users = JSON.parse(localStorage.getItem("users") || "[]")
-      const newUser = {
-        id: Date.now(),
-        ...formData,
-        createdAt: new Date().toISOString(),
-        status: formData.role === "cleaner" ? "pending" : "active",
-      }
-      users.push(newUser)
-      localStorage.setItem("users", JSON.stringify(users))
+    try {
+      const { agreeTerms, ...dataToSend } = formData
+      await register(dataToSend)
 
-      // Auto login
-      localStorage.setItem("currentUser", JSON.stringify(newUser))
+      await MySwal.fire({
+        icon: "success",
+        title: "Đăng ký thành công!",
+        text: "Bạn sẽ được chuyển đến trang đăng nhập.",
+        timer: 2000,
+        showConfirmButton: false,
+      })
 
-      // Redirect based on role
-      switch (formData.role) {
-        case "cleaner":
-          router.push("/cleaner/dashboard")
-          break
-        default:
-          router.push("/user/dashboard")
-      }
+      router.push("/login")
+    } catch (err: any) {
+      await MySwal.fire({
+        icon: "error",
+        title: "Đăng ký thất bại",
+        text: err.message || "Đã có lỗi xảy ra. Vui lòng thử lại.",
+      })
+      setError(err.message)
+    } finally {
       setLoading(false)
-    }, 1000)
+    }
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
       <Header />
-
       <div className="pt-20 pb-16 px-4">
         <div className="max-w-md mx-auto">
           <div className="text-center mb-8">
@@ -106,9 +106,7 @@ export default function RegisterPage() {
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="role" className="text-sm font-medium">
-                    Loại tài khoản
-                  </Label>
+                  <Label htmlFor="role">Loại tài khoản</Label>
                   <Select value={formData.role} onValueChange={(value) => handleInputChange("role", value)}>
                     <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500">
                       <SelectValue placeholder="Chọn loại tài khoản" />
@@ -131,71 +129,29 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-sm font-medium">
-                    Họ và tên
-                  </Label>
-                  <Input
-                    id="name"
-                    placeholder="Nhập họ và tên"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
-                    required
-                    className="h-12 border-gray-300 focus:border-blue-500"
-                  />
+                  <Label htmlFor="name">Họ và tên</Label>
+                  <Input id="name" value={formData.name} onChange={(e) => handleInputChange("name", e.target.value)} required />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium">
-                    Email
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="your@email.com"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    required
-                    className="h-12 border-gray-300 focus:border-blue-500"
-                  />
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" value={formData.email} onChange={(e) => handleInputChange("email", e.target.value)} required />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-sm font-medium">
-                    Số điện thoại
-                  </Label>
-                  <Input
-                    id="phone"
-                    placeholder="0123456789"
-                    value={formData.phone}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
-                    required
-                    className="h-12 border-gray-300 focus:border-blue-500"
-                  />
+                  <Label htmlFor="phone">Số điện thoại</Label>
+                  <Input id="phone" value={formData.phone} onChange={(e) => handleInputChange("phone", e.target.value)} required />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="address" className="text-sm font-medium">
-                    Địa chỉ
-                  </Label>
-                  <Input
-                    id="address"
-                    placeholder="Nhập địa chỉ của bạn"
-                    value={formData.address}
-                    onChange={(e) => handleInputChange("address", e.target.value)}
-                    required
-                    className="h-12 border-gray-300 focus:border-blue-500"
-                  />
+                  <Label htmlFor="address">Địa chỉ</Label>
+                  <Input id="address" value={formData.address} onChange={(e) => handleInputChange("address", e.target.value)} required />
                 </div>
 
                 {formData.role === "cleaner" && (
                   <div className="space-y-2">
-                    <Label htmlFor="experience" className="text-sm font-medium">
-                      Kinh nghiệm làm việc
-                    </Label>
-                    <Select
-                      value={formData.experience}
-                      onValueChange={(value) => handleInputChange("experience", value)}
-                    >
+                    <Label htmlFor="experience">Kinh nghiệm làm việc</Label>
+                    <Select value={formData.experience} onValueChange={(value) => handleInputChange("experience", value)}>
                       <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500">
                         <SelectValue placeholder="Chọn kinh nghiệm" />
                       </SelectTrigger>
@@ -210,24 +166,21 @@ export default function RegisterPage() {
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium">
-                    Mật khẩu
-                  </Label>
+                  <Label htmlFor="password">Mật khẩu</Label>
                   <div className="relative">
                     <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
-                      placeholder="Nhập mật khẩu"
                       value={formData.password}
                       onChange={(e) => handleInputChange("password", e.target.value)}
                       required
-                      className="h-12 border-gray-300 focus:border-blue-500 pr-12"
+                      className="h-12 pr-12"
                     />
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      className="absolute right-0 top-0 h-full px-3 py-2"
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -243,13 +196,8 @@ export default function RegisterPage() {
                   />
                   <Label htmlFor="terms" className="text-sm leading-relaxed">
                     Tôi đồng ý với{" "}
-                    <Link href="/terms" className="text-blue-600 hover:text-purple-600 hover:underline">
-                      điều khoản sử dụng
-                    </Link>{" "}
-                    và{" "}
-                    <Link href="/privacy" className="text-blue-600 hover:text-purple-600 hover:underline">
-                      chính sách bảo mật
-                    </Link>
+                    <Link href="/terms" className="text-blue-600 hover:text-purple-600 hover:underline">điều khoản sử dụng</Link> và{" "}
+                    <Link href="/privacy" className="text-blue-600 hover:text-purple-600 hover:underline">chính sách bảo mật</Link>
                   </Label>
                 </div>
 

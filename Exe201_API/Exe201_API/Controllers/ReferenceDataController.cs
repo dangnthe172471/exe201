@@ -1,8 +1,6 @@
 using Exe201_API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Exe201_API.Controllers
 {

@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -18,6 +17,8 @@ import { useRouter } from "next/navigation"
 import Header from "@/components/header"
 import MapSelector from "@/components/map-selector"
 import type { GeocodingResult } from "@/lib/geocode"
+import { createBooking } from "@/app/api/services/bookingApi"
+import { getServices, getAreaSizes, getTimeSlots } from "@/app/api/services/ReferenceData"
 
 export default function BookingPage() {
   const [user, setUser] = useState<any>(null)
@@ -38,50 +39,9 @@ export default function BookingPage() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const router = useRouter()
-
-  const services = [
-    {
-      id: "home-regular",
-      name: "Dọn Nhà Định Kỳ",
-      basePrice: 300000,
-      unit: "lần",
-      icon: "🏠",
-      color: "from-blue-500 to-cyan-400",
-    },
-    {
-      id: "office",
-      name: "Dọn Văn Phòng",
-      basePrice: 500000,
-      unit: "lần",
-      icon: "🏢",
-      color: "from-purple-500 to-pink-400",
-    },
-    {
-      id: "post-construction",
-      name: "Dọn Sau Xây Dựng",
-      basePrice: 800000,
-      unit: "lần",
-      icon: "🔨",
-      color: "from-orange-500 to-red-400",
-    },
-    {
-      id: "year-end",
-      name: "Dọn Cuối Năm",
-      basePrice: 600000,
-      unit: "lần",
-      icon: "🎊",
-      color: "from-green-500 to-emerald-400",
-    },
-  ]
-
-  const timeSlots = ["08:00 - 10:00", "10:00 - 12:00", "14:00 - 16:00", "16:00 - 18:00"]
-
-  const areaSizes = [
-    { id: "small", name: "Nhỏ (< 50m²)", multiplier: 1 },
-    { id: "medium", name: "Trung bình (50-100m²)", multiplier: 1.5 },
-    { id: "large", name: "Lớn (100-200m²)", multiplier: 2 },
-    { id: "extra-large", name: "Rất lớn (> 200m²)", multiplier: 2.5 },
-  ]
+  const [services, setServices] = useState<any[]>([])
+  const [areaSizes, setAreaSizes] = useState<any[]>([])
+  const [timeSlots, setTimeSlots] = useState<any[]>([])
 
   useEffect(() => {
     const currentUser = localStorage.getItem("currentUser")
@@ -96,6 +56,17 @@ export default function BookingPage() {
       contactName: userData.name || "",
       contactPhone: userData.phone || "",
     }))
+
+    const token = userData.token
+    Promise.all([getServices(token), getAreaSizes(token), getTimeSlots(token)])
+      .then(([servicesData, areasData, timesData]) => {
+        setServices(servicesData)
+        setAreaSizes(areasData)
+        setTimeSlots(timesData)
+      })
+      .catch((error) => {
+        console.error("Lỗi lấy dữ liệu:", error.message)
+      })
   }, [router])
 
   useEffect(() => {
@@ -103,8 +74,8 @@ export default function BookingPage() {
   }, [formData.serviceType, formData.area])
 
   const calculatePrice = () => {
-    const service = services.find((s) => s.id === formData.serviceType)
-    const area = areaSizes.find((a) => a.id === formData.area)
+    const service = services.find((s) => s.id.toString() === formData.serviceType)
+    const area = areaSizes.find((a) => a.id.toString() === formData.area)
 
     if (service && area) {
       setTotalPrice(service.basePrice * area.multiplier)
@@ -115,7 +86,6 @@ export default function BookingPage() {
 
   const handleLocationSelect = (location: GeocodingResult) => {
     setCurrentLocation(location)
-    // Chỉ fill quận/huyện - tỉnh/thành phố
     handleInputChange("address", location.address)
     setLocationError(null)
   }
@@ -124,7 +94,6 @@ export default function BookingPage() {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  // Tạo địa chỉ đầy đủ từ detailedAddress + address
   const getFullAddress = () => {
     if (formData.detailedAddress && formData.address) {
       return `${formData.detailedAddress}, ${formData.address}`
@@ -138,33 +107,33 @@ export default function BookingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log("TOKEN:", user?.token)
+
     if (!user) return
 
-    setLoading(true)
+    try {
+      setLoading(true)
 
-    // Simulate API call
-    setTimeout(() => {
-      const bookings = JSON.parse(localStorage.getItem("bookings") || "[]")
-      const fullAddress = getFullAddress()
-
-      const newBooking = {
-        id: Date.now(),
-        userId: user.id,
-        ...formData,
-        // Địa chỉ cuối cùng là detailedAddress + address
-        address: fullAddress,
-        date: selectedDate?.toISOString(),
-        totalPrice,
-        status: "pending",
-        createdAt: new Date().toISOString(),
-        coordinates: currentLocation?.coordinates || null,
+      const payload = {
+        serviceId: parseInt(formData.serviceType),
+        areaSizeId: parseInt(formData.area),
+        timeSlotId: parseInt(formData.timeSlot),
+        bookingDate: format(selectedDate!, "yyyy-MM-dd"),
+        addressDistrict: formData.address,
+        addressDetail: formData.detailedAddress,
+        contactName: formData.contactName,
+        contactPhone: formData.contactPhone,
+        notes: formData.notes || "",
       }
-      bookings.push(newBooking)
-      localStorage.setItem("bookings", JSON.stringify(bookings))
 
-      setLoading(false)
+      await createBooking(payload, user.token)
+
       setSuccess(true)
-    }, 1000)
+    } catch (error: any) {
+      alert(error.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (!user) {
@@ -244,7 +213,7 @@ export default function BookingPage() {
                     </SelectTrigger>
                     <SelectContent>
                       {services.map((service) => (
-                        <SelectItem key={service.id} value={service.id}>
+                        <SelectItem key={service.id} value={service.id.toString()}>
                           <div className="flex justify-between items-center w-full">
                             <div className="flex items-center">
                               <span className="text-lg mr-2">{service.icon}</span>
@@ -269,8 +238,10 @@ export default function BookingPage() {
                     </SelectTrigger>
                     <SelectContent>
                       {areaSizes.map((area) => (
-                        <SelectItem key={area.id} value={area.id}>
-                          {area.name}
+                        <SelectItem key={area.id} value={area.id.toString()}>
+                          <div className="flex items-center">
+                            {area.name}
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -311,10 +282,10 @@ export default function BookingPage() {
                     </SelectTrigger>
                     <SelectContent>
                       {timeSlots.map((slot) => (
-                        <SelectItem key={slot} value={slot}>
+                        <SelectItem key={slot.id} value={slot.id.toString()}>
                           <div className="flex items-center">
                             <Clock className="w-4 h-4 mr-2" />
-                            {slot}
+                            {slot.timeRange}
                           </div>
                         </SelectItem>
                       ))}

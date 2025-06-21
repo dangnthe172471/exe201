@@ -2,8 +2,6 @@ using Exe201_API.DTOs;
 using Exe201_API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Threading.Tasks;
 
 namespace Exe201_API.Controllers
 {

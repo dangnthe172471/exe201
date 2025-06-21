@@ -356,8 +356,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Tổng khách hàng</p>
-                    {/* <p className="text-2xl font-bold">{users.length}</p> */}
-                    <p className="text-2xl font-bold">21</p>
+                    <p className="text-2xl font-bold">{users.length}</p>
                   </div>
                   <Users className="w-8 h-8 text-blue-600" />
                 </div>
@@ -369,8 +368,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Nhân viên</p>
-                    {/* <p className="text-2xl font-bold">{cleaners.length}</p> */}
-                    <p className="text-2xl font-bold">4</p>
+                    <p className="text-2xl font-bold">{cleaners.length}</p>
                   </div>
                   <Users className="w-8 h-8 text-green-600" />
                 </div>
@@ -382,8 +380,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Tổng đơn hàng</p>
-                    {/* <p className="text-2xl font-bold">{bookings.length}</p> */}
-                    <p className="text-2xl font-bold">21</p>
+                    <p className="text-2xl font-bold">{bookings.length}</p>
                   </div>
                   <Calendar className="w-8 h-8 text-purple-600" />
                 </div>
@@ -395,22 +392,9 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Doanh thu</p>
-                    {/* <p className="text-2xl font-bold">{totalRevenue.toLocaleString("vi-VN")}đ</p> */}
-                    <p className="text-2xl font-bold">2.958.000đ</p>
+                    <p className="text-2xl font-bold">{totalRevenue.toLocaleString("vi-VN")}đ</p>
                   </div>
                   <DollarSign className="w-8 h-8 text-yellow-600" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Tổng hóa đơn</p>
-                    <p className="text-2xl font-bold">{bills.length}</p>
-                  </div>
-                  <DollarSign className="w-8 h-8 text-orange-600" />
                 </div>
               </CardContent>
             </Card>
