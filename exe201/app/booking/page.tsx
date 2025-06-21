@@ -10,15 +10,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarDays, Clock, CheckCircle, Heart, Sparkles, MapPin } from "lucide-react"
+import { CalendarDays, Clock, CheckCircle, Heart, Sparkles, MapPin, Search, Building2, Home } from "lucide-react"
 import { format } from "date-fns"
 import { vi } from "date-fns/locale"
 import { useRouter } from "next/navigation"
 import Header from "@/components/header"
-import MapSelector from "@/components/map-selector"
-import type { GeocodingResult } from "@/lib/geocode"
 import { createBooking } from "@/app/api/services/bookingApi"
 import { getServices, getAreaSizes, getTimeSlots } from "@/app/api/services/ReferenceData"
+import {
+  vietnamProvinces,
+  getDistrictsByProvince,
+  getWardsByDistrict,
+  getFullAddressString,
+  type District,
+  type Ward,
+} from "@/lib/vietnam-address"
 
 export default function BookingPage() {
   const [user, setUser] = useState<any>(null)
@@ -33,8 +39,15 @@ export default function BookingPage() {
     contactName: "",
     contactPhone: "",
   })
-  const [currentLocation, setCurrentLocation] = useState<GeocodingResult | null>(null)
-  const [locationError, setLocationError] = useState<string | null>(null)
+
+  const [districts, setDistricts] = useState<District[]>([])
+  const [wards, setWards] = useState<Ward[]>([])
+  const [selectedProvince, setSelectedProvince] = useState("")
+  const [selectedDistrict, setSelectedDistrict] = useState("")
+  const [selectedWard, setSelectedWard] = useState("")
+  const [provinceSearch, setProvinceSearch] = useState("")
+  const [districtSearch, setDistrictSearch] = useState("")
+  const [wardSearch, setWardSearch] = useState("")
   const [totalPrice, setTotalPrice] = useState(0)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -84,10 +97,49 @@ export default function BookingPage() {
     }
   }
 
-  const handleLocationSelect = (location: GeocodingResult) => {
-    setCurrentLocation(location)
-    handleInputChange("address", location.address)
-    setLocationError(null)
+  const handleProvinceChange = (provinceCode: string) => {
+    setSelectedProvince(provinceCode)
+    setSelectedDistrict("")
+    setSelectedWard("")
+    setDistrictSearch("")
+    setWardSearch("")
+    setWards([])
+    updateFullAddress(provinceCode, "", "", formData.detailedAddress)
+
+    // Load districts based on selected province
+    const provinceDistricts = getDistrictsByProvince(provinceCode)
+    setDistricts(provinceDistricts)
+  }
+
+  const handleDistrictChange = (districtCode: string) => {
+    setSelectedDistrict(districtCode)
+    setSelectedWard("")
+    setWardSearch("")
+    updateFullAddress(selectedProvince, districtCode, "", formData.detailedAddress)
+
+    // Load wards based on selected district
+    const districtWards = getWardsByDistrict(districtCode)
+    setWards(districtWards)
+  }
+
+  const handleWardChange = (wardCode: string) => {
+    setSelectedWard(wardCode)
+    updateFullAddress(selectedProvince, selectedDistrict, wardCode, formData.detailedAddress)
+  }
+
+  const updateFullAddress = (provinceCode: string, districtCode: string, wardCode: string, detailedAddr: string) => {
+    const fullAddress = getFullAddressString(provinceCode, districtCode, wardCode, detailedAddr)
+    // Chỉ lấy phần từ phường/xã trở lên (bỏ địa chỉ chi tiết)
+    const addressParts = fullAddress.split(", ")
+    const addressWithoutDetail = detailedAddr ? addressParts.slice(1).join(", ") : addressParts.join(", ")
+    handleInputChange("address", addressWithoutDetail)
+  }
+
+  const handleDetailedAddressChange = (value: string) => {
+    handleInputChange("detailedAddress", value)
+    if (selectedProvince && selectedDistrict && selectedWard) {
+      updateFullAddress(selectedProvince, selectedDistrict, selectedWard, value)
+    }
   }
 
   const handleInputChange = (field: string, value: any) => {
@@ -95,14 +147,7 @@ export default function BookingPage() {
   }
 
   const getFullAddress = () => {
-    if (formData.detailedAddress && formData.address) {
-      return `${formData.detailedAddress}, ${formData.address}`
-    } else if (formData.address) {
-      return formData.address
-    } else if (formData.detailedAddress) {
-      return formData.detailedAddress
-    }
-    return ""
+    return getFullAddressString(selectedProvince, selectedDistrict, selectedWard, formData.detailedAddress)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -115,9 +160,9 @@ export default function BookingPage() {
       setLoading(true)
 
       const payload = {
-        serviceId: parseInt(formData.serviceType),
-        areaSizeId: parseInt(formData.area),
-        timeSlotId: parseInt(formData.timeSlot),
+        serviceId: Number.parseInt(formData.serviceType),
+        areaSizeId: Number.parseInt(formData.area),
+        timeSlotId: Number.parseInt(formData.timeSlot),
         bookingDate: format(selectedDate!, "yyyy-MM-dd"),
         addressDistrict: formData.address,
         addressDetail: formData.detailedAddress,
@@ -136,8 +181,40 @@ export default function BookingPage() {
     }
   }
 
+  // Filter functions
+  const filteredProvinces = vietnamProvinces.filter((province) =>
+    province.name.toLowerCase().includes(provinceSearch.toLowerCase()),
+  )
+
+  const filteredDistricts = districts.filter((district) =>
+    district.name.toLowerCase().includes(districtSearch.toLowerCase()),
+  )
+
+  const filteredWards = wards.filter((ward) => ward.name.toLowerCase().includes(wardSearch.toLowerCase()))
+
+  // Helper function to get icon for ward type
+  const getWardIcon = (type: string) => {
+    switch (type) {
+      case "phuong":
+        return "🏢"
+      case "xa":
+        return "🌾"
+      case "thi-tran":
+        return "🏘️"
+      default:
+        return "📍"
+    }
+  }
+
   if (!user) {
-    return <div>Đang tải...</div>
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Đang tải...</p>
+        </div>
+      </div>
+    )
   }
 
   if (success) {
@@ -239,9 +316,7 @@ export default function BookingPage() {
                     <SelectContent>
                       {areaSizes.map((area) => (
                         <SelectItem key={area.id} value={area.id.toString()}>
-                          <div className="flex items-center">
-                            {area.name}
-                          </div>
+                          <div className="flex items-center">{area.name}</div>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -258,7 +333,7 @@ export default function BookingPage() {
                         className="w-full h-12 justify-start text-left font-normal border-gray-300 focus:border-blue-500"
                       >
                         <CalendarDays className="mr-2 h-4 w-4" />
-                        {selectedDate ? format(selectedDate, "PPP", { locale: vi }) : "Chọn ngày"}
+                        {selectedDate ? format(selectedDate, "dd/MM/yyyy", { locale: vi }) : "Chọn ngày"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -266,8 +341,9 @@ export default function BookingPage() {
                         mode="single"
                         selected={selectedDate}
                         onSelect={setSelectedDate}
-                        disabled={(date) => date < new Date()}
+                        disabled={(date) => date < new Date() || date < new Date("1900-01-01")}
                         initialFocus
+                        locale={vi}
                       />
                     </PopoverContent>
                   </Popover>
@@ -293,155 +369,184 @@ export default function BookingPage() {
                   </Select>
                 </div>
 
-                {/* Address Section */}
-                <div className="space-y-4">
-                  <Label className="text-sm font-medium">Địa chỉ thực hiện</Label>
-
-                  {/* Map Selector */}
-                  <div className="space-y-3">
-                    <MapSelector onLocationSelect={handleLocationSelect} currentLocation={currentLocation} />
-
-                    {/* Location result */}
-                    {currentLocation && (
-                      <div className="bg-blue-50 p-3 rounded-md border border-blue-100">
-                        <div className="flex items-start">
-                          <MapPin className="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" />
-                          <div>
-                            <p className="font-medium text-blue-700">Vị trí đã chọn</p>
-                            <p className="text-sm text-blue-600">{currentLocation.address}</p>
-                            <p className="text-xs text-blue-500 mt-1">
-                              Tọa độ: {currentLocation.coordinates.lat.toFixed(6)},{" "}
-                              {currentLocation.coordinates.lng.toFixed(6)}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Location error */}
-                    {locationError && (
-                      <div className="bg-red-50 p-3 rounded-md border border-red-100">
-                        <p className="text-red-600 text-sm">{locationError}</p>
-                      </div>
-                    )}
+                {/* Address Selection */}
+                <div className="space-y-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <MapPin className="w-5 h-5 text-blue-600" />
+                    <Label className="text-lg font-semibold text-blue-900">Địa chỉ dịch vụ</Label>
                   </div>
 
-                  {/* District/City Input - Đặt sau */}
+                  {/* Province Selection */}
                   <div className="space-y-3">
-                    <Label htmlFor="address" className="text-sm font-medium">
-                      Quận/Huyện - Tỉnh/Thành phố
+                    <Label className="text-sm font-medium flex items-center">
+                      <Building2 className="w-4 h-4 mr-2" />
+                      Tỉnh/Thành phố
                     </Label>
-                    <Input
-                      id="address"
-                      placeholder="Ví dụ: Quận Ba Đình, Hà Nội"
-                      value={formData.address}
-                      onChange={(e) => handleInputChange("address", e.target.value)}
-                      className="h-12 border-gray-300 focus:border-blue-500"
-                      required
-                    />
+                    <Select value={selectedProvince} onValueChange={handleProvinceChange}>
+                      <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500">
+                        <SelectValue placeholder="Chọn tỉnh/thành phố" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {filteredProvinces.map((province) => (
+                          <SelectItem key={province.code} value={province.code}>
+                            <div className="flex items-center">
+                              <span className="mr-2">{province.type === "thanh-pho" ? "🏙️" : "🏞️"}</span>
+                              {province.name}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
-                  {/* Detailed Address Input - Đặt trước */}
+                  {/* District Selection */}
+                  {selectedProvince && (
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium flex items-center">
+                        <Home className="w-4 h-4 mr-2" />
+                        Quận/Huyện
+                      </Label>
+                      <Select value={selectedDistrict} onValueChange={handleDistrictChange}>
+                        <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500">
+                          <SelectValue placeholder="Chọn quận/huyện" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60">
+                          {filteredDistricts.map((district) => (
+                            <SelectItem key={district.code} value={district.code}>
+                              <div className="flex items-center">
+                                <span className="mr-2">
+                                  {district.type === "quan" ? "🏢" : district.type === "thi-xa" ? "🏘️" : "🌾"}
+                                </span>
+                                {district.name}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {/* Ward Selection */}
+                  {selectedDistrict && (
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium flex items-center">
+                        <MapPin className="w-4 h-4 mr-2" />
+                        Phường/Xã
+                      </Label>
+                      <Select value={selectedWard} onValueChange={handleWardChange}>
+                        <SelectTrigger className="h-12 border-gray-300 focus:border-blue-500">
+                          <SelectValue placeholder="Chọn phường/xã" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60">
+                          {filteredWards.map((ward) => (
+                            <SelectItem key={ward.code} value={ward.code}>
+                              <div className="flex items-center">
+                                <span className="mr-2">{getWardIcon(ward.type)}</span>
+                                {ward.name}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {/* Detailed Address */}
                   <div className="space-y-3">
-                    <Label htmlFor="detailedAddress" className="text-sm font-medium">
-                      Địa chỉ chi tiết
-                    </Label>
+                    <Label className="text-sm font-medium">Địa chỉ chi tiết</Label>
                     <Input
-                      id="detailedAddress"
-                      placeholder="Số nhà, tên đường, phường/xã... (Ví dụ: 123 Phố Điện Biên Phủ, Phường Điện Biên)"
+                      placeholder="Số nhà, tên đường, tòa nhà..."
                       value={formData.detailedAddress}
-                      onChange={(e) => handleInputChange("detailedAddress", e.target.value)}
+                      onChange={(e) => handleDetailedAddressChange(e.target.value)}
                       className="h-12 border-gray-300 focus:border-blue-500"
-                      required
                     />
                   </div>
 
                   {/* Address Preview */}
-                  {(formData.detailedAddress || formData.address) && (
-                    <div className="bg-green-50 p-3 rounded-md border border-green-100">
-                      <p className="text-sm font-medium text-green-700 mb-1">Địa chỉ đầy đủ:</p>
-                      <p className="text-green-600">{getFullAddress()}</p>
+                  {(selectedProvince || selectedDistrict || selectedWard || formData.detailedAddress) && (
+                    <div className="p-4 bg-white rounded-lg border border-blue-200 shadow-sm">
+                      <Label className="text-sm font-medium text-blue-900 mb-2 block">Địa chỉ đầy đủ:</Label>
+                      <p className="text-gray-700 font-medium">{getFullAddress() || "Chưa có thông tin địa chỉ"}</p>
                     </div>
                   )}
-
-                  <p className="text-xs text-gray-500">
-                    Địa chỉ cuối cùng sẽ là: <strong>Địa chỉ chi tiết + Quận/Huyện - Tỉnh/Thành phố</strong>
-                  </p>
                 </div>
 
-                {/* Contact Info */}
-                <div className="grid grid-cols-2 gap-4">
+                {/* Contact Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-3">
-                    <Label htmlFor="contactName" className="text-sm font-medium">
-                      Tên người liên hệ
-                    </Label>
+                    <Label className="text-sm font-medium">Tên người liên hệ</Label>
                     <Input
-                      id="contactName"
                       value={formData.contactName}
                       onChange={(e) => handleInputChange("contactName", e.target.value)}
-                      required
                       className="h-12 border-gray-300 focus:border-blue-500"
+                      required
                     />
                   </div>
                   <div className="space-y-3">
-                    <Label htmlFor="contactPhone" className="text-sm font-medium">
-                      Số điện thoại
-                    </Label>
+                    <Label className="text-sm font-medium">Số điện thoại</Label>
                     <Input
-                      id="contactPhone"
                       value={formData.contactPhone}
                       onChange={(e) => handleInputChange("contactPhone", e.target.value)}
-                      required
                       className="h-12 border-gray-300 focus:border-blue-500"
+                      required
                     />
                   </div>
                 </div>
 
                 {/* Notes */}
                 <div className="space-y-3">
-                  <Label htmlFor="notes" className="text-sm font-medium">
-                    Ghi chú thêm
-                  </Label>
+                  <Label className="text-sm font-medium">Ghi chú (tùy chọn)</Label>
                   <Textarea
-                    id="notes"
-                    placeholder="Yêu cầu đặc biệt, hướng dẫn đường đi..."
+                    placeholder="Yêu cầu đặc biệt, ghi chú thêm..."
                     value={formData.notes}
                     onChange={(e) => handleInputChange("notes", e.target.value)}
-                    className="border-gray-300 focus:border-blue-500"
+                    className="min-h-[100px] border-gray-300 focus:border-blue-500 resize-none"
                   />
                 </div>
 
-                {/* Price Summary */}
+                {/* Price Display */}
                 {totalPrice > 0 && (
-                  <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
-                    <CardContent className="pt-6">
-                      <div className="flex justify-between items-center">
-                        <span className="text-lg font-semibold">Tổng chi phí:</span>
-                        <div className="text-right">
-                          <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                            {totalPrice.toLocaleString("vi-VN")}đ
-                          </div>
-                          <div className="text-sm text-gray-600">(Đã bao gồm VAT)</div>
-                        </div>
+                  <div className="p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <Sparkles className="w-6 h-6 text-green-600 mr-2" />
+                        <span className="text-lg font-semibold text-green-900">Tổng chi phí dự kiến:</span>
                       </div>
-                    </CardContent>
-                  </Card>
+                      <span className="text-2xl font-bold text-green-600">{totalPrice.toLocaleString("vi-VN")}đ</span>
+                    </div>
+                    <p className="text-sm text-green-700 mt-2">
+                      * Giá cuối cùng có thể thay đổi tùy theo tình trạng thực tế
+                    </p>
+                  </div>
                 )}
 
+                {/* Submit Button */}
                 <Button
                   type="submit"
-                  className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-lg"
                   disabled={
-                    loading || !selectedDate || !formData.serviceType || !formData.detailedAddress || !formData.address
+                    loading ||
+                    !formData.serviceType ||
+                    !formData.area ||
+                    !formData.timeSlot ||
+                    !selectedDate ||
+                    !selectedProvince ||
+                    !selectedDistrict ||
+                    !selectedWard ||
+                    !formData.contactName ||
+                    !formData.contactPhone
                   }
+                  className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                 >
                   {loading ? (
-                    "Đang xử lý..."
+                    <div className="flex items-center">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      Đang xử lý...
+                    </div>
                   ) : (
-                    <>
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Xác Nhận Đặt Lịch
-                    </>
+                    <div className="flex items-center">
+                      <CheckCircle className="w-5 h-5 mr-2" />
+                      Xác nhận đặt lịch
+                    </div>
                   )}
                 </Button>
               </form>
