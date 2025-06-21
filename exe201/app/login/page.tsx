@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,6 +12,7 @@ import { Heart, Eye, EyeOff, User, Shield, Briefcase } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import Header from "@/components/header"
+import { login } from "@/app/api/services/authApi" // ✅ import hàm gọi API
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -22,11 +22,10 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  // Demo accounts
   const demoAccounts = {
-    user: { email: "user@demo.com", password: "123456", name: "Nguyễn Văn A", role: "user" },
-    cleaner: { email: "cleaner@demo.com", password: "123456", name: "Trần Thị B", role: "cleaner" },
-    admin: { email: "admin@demo.com", password: "123456", name: "Admin", role: "admin" },
+    user: { email: "user@demo.com", password: "123456" },
+    cleaner: { email: "cleaner@demo.com", password: "123456" },
+    admin: { email: "admin@demo.com", password: "123456" },
   }
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -34,29 +33,36 @@ export default function LoginPage() {
     setLoading(true)
     setError("")
 
-    // Simulate API call
-    setTimeout(() => {
-      const account = Object.values(demoAccounts).find((acc) => acc.email === email && acc.password === password)
+    try {
+      const response = await login({ email, password })
 
-      if (account) {
-        localStorage.setItem("currentUser", JSON.stringify(account))
+      // ✅ Ghi đúng định dạng vào localStorage
+      localStorage.setItem("token", response.token)
+      localStorage.setItem("currentUser", JSON.stringify({
+        name: response.name,
+        email: response.email,
+        phone: response.phone,
+        address: response.address,
+        role: response.role,
+        token: response.token // ✅ THÊM token vào đây
+      }))
 
-        // Redirect based on role
-        switch (account.role) {
-          case "admin":
-            router.push("/admin/dashboard")
-            break
-          case "cleaner":
-            router.push("/cleaner/dashboard")
-            break
-          default:
-            router.push("/user/dashboard")
-        }
-      } else {
-        setError("Email hoặc mật khẩu không đúng")
+      // ✅ Điều hướng theo vai trò
+      switch (response.role) {
+        case "admin":
+          router.push("/admin/dashboard")
+          break
+        case "cleaner":
+          router.push("/cleaner/dashboard")
+          break
+        default:
+          router.push("/user/dashboard")
       }
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
       setLoading(false)
-    }, 1000)
+    }
   }
 
   const handleDemoLogin = (role: "user" | "cleaner" | "admin") => {
@@ -145,70 +151,6 @@ export default function LoginPage() {
                   {loading ? "Đang đăng nhập..." : "Đăng Nhập"}
                 </Button>
               </form>
-
-              <div className="mt-8">
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-gray-300" />
-                  </div>
-                  <div className="relative flex justify-center text-sm uppercase">
-                    <span className="bg-white px-4 text-gray-500 font-medium">Hoặc thử tài khoản demo</span>
-                  </div>
-                </div>
-
-                <Tabs defaultValue="user" className="mt-6">
-                  <TabsList className="grid w-full grid-cols-3 bg-gray-100">
-                    <TabsTrigger value="user" className="text-xs font-medium">
-                      <User className="w-4 h-4 mr-1" />
-                      Khách hàng
-                    </TabsTrigger>
-                    <TabsTrigger value="cleaner" className="text-xs font-medium">
-                      <Briefcase className="w-4 h-4 mr-1" />
-                      Nhân viên
-                    </TabsTrigger>
-                    <TabsTrigger value="admin" className="text-xs font-medium">
-                      <Shield className="w-4 h-4 mr-1" />
-                      Quản trị
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="user" className="mt-4">
-                    <Button
-                      variant="outline"
-                      className="w-full h-12 border-blue-200 text-blue-700 hover:bg-blue-50"
-                      onClick={() => handleDemoLogin("user")}
-                    >
-                      <User className="w-4 h-4 mr-2" />
-                      Đăng nhập với tài khoản khách hàng
-                    </Button>
-                    <p className="text-xs text-gray-500 mt-2 text-center">Email: user@demo.com | Mật khẩu: 123456</p>
-                  </TabsContent>
-
-                  <TabsContent value="cleaner" className="mt-4">
-                    <Button
-                      variant="outline"
-                      className="w-full h-12 border-green-200 text-green-700 hover:bg-green-50"
-                      onClick={() => handleDemoLogin("cleaner")}
-                    >
-                      <Briefcase className="w-4 h-4 mr-2" />
-                      Đăng nhập với tài khoản nhân viên
-                    </Button>
-                    <p className="text-xs text-gray-500 mt-2 text-center">Email: cleaner@demo.com | Mật khẩu: 123456</p>
-                  </TabsContent>
-
-                  <TabsContent value="admin" className="mt-4">
-                    <Button
-                      variant="outline"
-                      className="w-full h-12 border-purple-200 text-purple-700 hover:bg-purple-50"
-                      onClick={() => handleDemoLogin("admin")}
-                    >
-                      <Shield className="w-4 h-4 mr-2" />
-                      Đăng nhập với tài khoản quản trị
-                    </Button>
-                    <p className="text-xs text-gray-500 mt-2 text-center">Email: admin@demo.com | Mật khẩu: 123456</p>
-                  </TabsContent>
-                </Tabs>
-              </div>
 
               <div className="mt-8 text-center text-sm">
                 <span className="text-gray-600">Chưa có tài khoản? </span>

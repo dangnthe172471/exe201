@@ -13,6 +13,14 @@ import { format } from "date-fns"
 import { vi } from "date-fns/locale"
 import { useRouter } from "next/navigation"
 import Header from "@/components/header"
+import {
+  getCleanerAvailableJobs,
+  getCleanerMyJobs,
+  getCleanerProfile,
+  acceptCleanerJob,
+  updateCleanerJobStatus,
+} from "@/app/api/services/cleanerApi"
+
 
 export default function CleanerDashboard() {
   const [user, setUser] = useState<any>(null)
@@ -22,63 +30,58 @@ export default function CleanerDashboard() {
 
   useEffect(() => {
     const currentUser = localStorage.getItem("currentUser")
-    if (!currentUser) {
-      router.push("/login")
-      return
-    }
+    if (!currentUser) return router.push("/login")
 
     const userData = JSON.parse(currentUser)
-    if (userData.role !== "cleaner") {
-      router.push("/")
-      return
-    }
+    if (userData.role !== "cleaner") return router.push("/")
 
     setUser(userData)
-    loadJobs(userData.id)
+    const token = userData.token
+
+    loadJobs(token)
+    loadProfile(token)
   }, [router])
 
-  const loadJobs = (cleanerId: number) => {
-    const allBookings = JSON.parse(localStorage.getItem("bookings") || "[]")
-
-    // Available jobs (pending status, not assigned to anyone)
-    const available = allBookings.filter((booking: any) => booking.status === "pending" && !booking.cleanerId)
-    setAvailableJobs(available)
-
-    // My jobs (assigned to this cleaner)
-    const myAssigned = allBookings.filter((booking: any) => booking.cleanerId === cleanerId)
-    setMyJobs(myAssigned)
+  const loadJobs = async (token: string) => {
+    try {
+      const available = await getCleanerAvailableJobs(token)
+      const mine = await getCleanerMyJobs(token)
+      setAvailableJobs(available)
+      setMyJobs(mine)
+    } catch (err) {
+      console.error("Lỗi khi load jobs:", err)
+    }
   }
 
-  const acceptJob = (jobId: number) => {
-    const allBookings = JSON.parse(localStorage.getItem("bookings") || "[]")
-    const updatedBookings = allBookings.map((booking: any) => {
-      if (booking.id === jobId) {
-        return {
-          ...booking,
-          cleanerId: user.id,
-          cleanerName: user.name,
-          status: "confirmed",
-        }
-      }
-      return booking
-    })
-
-    localStorage.setItem("bookings", JSON.stringify(updatedBookings))
-    loadJobs(user.id)
+  const loadProfile = async (token: string) => {
+    try {
+      const profile = await getCleanerProfile(token)
+      setUser((prev: any) => ({ ...prev, ...profile }))
+    } catch (err) {
+      console.error(err)
+    }
   }
 
-  const updateJobStatus = (jobId: number, newStatus: string) => {
-    const allBookings = JSON.parse(localStorage.getItem("bookings") || "[]")
-    const updatedBookings = allBookings.map((booking: any) => {
-      if (booking.id === jobId) {
-        return { ...booking, status: newStatus }
-      }
-      return booking
-    })
 
-    localStorage.setItem("bookings", JSON.stringify(updatedBookings))
-    loadJobs(user.id)
+  const acceptJob = async (jobId: number) => {
+    try {
+      await acceptCleanerJob(jobId, user.token) // gọi đúng api
+      await loadJobs(user.token)
+    } catch (err) {
+      console.error("Lỗi khi nhận việc:", err)
+    }
   }
+
+
+  const updateJobStatus = async (jobId: number, newStatus: string) => {
+    try {
+      await updateCleanerJobStatus(jobId, newStatus, user.token)
+      await loadJobs(user.token)
+    } catch (err) {
+      console.error("Lỗi khi cập nhật trạng thái:", err)
+    }
+  }
+
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {

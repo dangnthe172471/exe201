@@ -36,7 +36,9 @@ namespace Exe201_API.Services
                 UserId = user.Id,
                 Email = user.Email,
                 Name = user.Name,
-                Role = user.Role
+                Role = user.Role,
+                Phone = user.Phone,        // ✅ Thêm
+                Address = user.Address     // ✅ Thêm
             };
         }
 
@@ -65,7 +67,9 @@ namespace Exe201_API.Services
                 UserId = user.Id,
                 Email = user.Email,
                 Name = user.Name,
-                Role = user.Role
+                Role = user.Role,
+                Phone = user.Phone,        // ✅ Thêm
+                Address = user.Address     // ✅ Thêm
             };
         }
 
