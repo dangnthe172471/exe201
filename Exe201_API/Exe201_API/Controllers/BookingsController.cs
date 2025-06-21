@@ -68,6 +68,26 @@ namespace Exe201_API.Controllers
             }
         }
 
+        [HttpGet("{id}")]
+        [Authorize(Roles = "user")]
+        public async Task<IActionResult> GetBookingByIdForUser(int id)
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                var booking = await _bookingService.GetUserBookingByIdAsync(id, userId);
+                if (booking == null)
+                {
+                    return NotFound(new { message = "Không tìm thấy đơn hàng hoặc bạn không có quyền truy cập." });
+                }
+                return Ok(booking);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi hệ thống", detail = ex.Message });
+            }
+        }
+
         [HttpGet("dashboard-stats")]
         [Authorize(Roles = "user")]
         public async Task<IActionResult> GetDashboardStats()

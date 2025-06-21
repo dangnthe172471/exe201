@@ -31,6 +31,12 @@ Authorization: Bearer {{userToken}}
 
 ###
 
+# Lấy chi tiết booking của user theo ID
+GET {{baseUrl}}/api/bookings/1
+Authorization: Bearer {{userToken}}
+
+###
+
 # Lấy thống kê dashboard của user
 GET {{baseUrl}}/api/bookings/dashboard-stats
 Authorization: Bearer {{userToken}}

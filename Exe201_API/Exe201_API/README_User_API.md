@@ -77,7 +77,15 @@ Lấy danh sách các lịch đặt của người dùng hiện tại.
 ]
 ```
 
-### 2. Lấy thống kê Dashboard
+### 2. Lấy chi tiết lịch đặt
+**GET** `/api/bookings/{id}`
+
+Lấy thông tin chi tiết của một lịch đặt cụ thể. Endpoint này sẽ kiểm tra quyền sở hữu, đảm bảo bạn chỉ xem được lịch đặt của chính mình.
+
+**Response:**
+- Trả về một object `BookingResponseDto` duy nhất, tương tự như một phần tử trong mảng ở mục 2.1.
+
+### 3. Lấy thống kê Dashboard
 **GET** `/api/bookings/dashboard-stats`
 
 Lấy các số liệu thống kê cho trang dashboard của người dùng.

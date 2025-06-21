@@ -8,6 +8,7 @@ namespace Exe201_API.Services
     {
         Task<BookingResponseDto> CreateBookingAsync(CreateBookingRequestDto request, int userId);
         Task<IEnumerable<BookingResponseDto>> GetUserBookingsAsync(int userId, string? status);
+        Task<BookingResponseDto?> GetUserBookingByIdAsync(int bookingId, int userId);
         Task<DashboardStatsDto> GetDashboardStatsAsync(int userId);
         
         // Cleaner methods

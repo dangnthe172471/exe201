@@ -108,6 +108,41 @@ namespace Exe201_API.Services
                 }).ToListAsync();
         }
 
+        public async Task<BookingResponseDto?> GetUserBookingByIdAsync(int bookingId, int userId)
+        {
+            var booking = await _context.Bookings
+                .AsNoTracking()
+                .Include(b => b.User)
+                .Include(b => b.Service)
+                .Include(b => b.AreaSize)
+                .Include(b => b.TimeSlot)
+                .Include(b => b.Cleaner)
+                .FirstOrDefaultAsync(b => b.Id == bookingId && b.UserId == userId);
+
+            if (booking == null)
+            {
+                return null;
+            }
+
+            return new BookingResponseDto
+            {
+                Id = booking.Id,
+                UserName = booking.User.Name,
+                ServiceName = booking.Service.Name,
+                AreaSizeName = booking.AreaSize.Name,
+                TimeSlotRange = booking.TimeSlot?.TimeRange,
+                BookingDate = booking.BookingDate,
+                Address = booking.Address,
+                ContactName = booking.ContactName,
+                ContactPhone = booking.ContactPhone,
+                Notes = booking.Notes,
+                TotalPrice = booking.TotalPrice,
+                Status = booking.Status,
+                CleanerName = booking.Cleaner?.Name ?? "Chưa có",
+                CreatedAt = booking.CreatedAt
+            };
+        }
+
         public async Task<DashboardStatsDto> GetDashboardStatsAsync(int userId)
         {
             var userBookings = _context.Bookings.Where(b => b.UserId == userId);
