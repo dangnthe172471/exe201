@@ -75,3 +75,27 @@ export async function getDashboardStats(token: string) {
     return await res.json()
 }
 
+// Hàm gọi API lấy chi tiết booking theo ID
+export async function getBookingById(id: number, token: string) {
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/bookings/${id}`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        if (response.status === 404) {
+            throw new Error('Không tìm thấy đơn hàng hoặc bạn không có quyền truy cập.');
+        }
+        if (response.status === 401) {
+            throw new Error('Bạn chưa đăng nhập hoặc token không hợp lệ.');
+        }
+        throw new Error('Có lỗi xảy ra khi lấy thông tin đơn hàng.');
+    }
+
+    return await response.json();
+}
+

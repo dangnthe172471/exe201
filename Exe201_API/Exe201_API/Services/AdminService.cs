@@ -190,6 +190,7 @@ namespace Exe201_API.Services
                     Email = u.Email,
                     Phone = u.Phone,
                     Address = u.Address,
+                    Status = u.Status ?? "Active",
                     CreatedAt = u.CreatedAt,
                     TotalBookings = u.BookingUsers.Count,
                     TotalSpent = u.BookingUsers.Where(b => b.Status == "completed").Sum(b => b.TotalPrice)

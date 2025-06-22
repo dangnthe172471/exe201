@@ -181,7 +181,7 @@ export default function UserDashboard() {
                       <div>
                         <p><Calendar className="inline w-4 h-4 mr-2" />
                           {b.date ? format(new Date(b.date), "PPP", { locale: vi }) : "Không rõ ngày"}</p>
-                        <p><Clock className="inline w-4 h-4 mr-2" />{b.timeSlot}</p>
+                        <p><Clock className="inline w-4 h-4 mr-2" />{b.timeSlotRange}</p>
                         <p><MapPin className="inline w-4 h-4 mr-2" />{b.address}</p>
                       </div>
                       <div>

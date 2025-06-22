@@ -22,6 +22,8 @@ namespace Exe201_API.Services
         {
             IQueryable<NewsArticle> query = _context.NewsArticles
                 .AsNoTracking()
+                .Include(a => a.Category)
+                .Include(a => a.Author)
                 .Where(a => a.IsActive == true && a.PublishDate <= DateTime.UtcNow);
 
             if (!string.IsNullOrEmpty(categorySlug))
@@ -54,6 +56,8 @@ namespace Exe201_API.Services
         {
             return await _context.NewsArticles
                 .AsNoTracking()
+                .Include(a => a.Category)
+                .Include(a => a.Author)
                 .Where(a => a.IsActive == true && a.IsFeatured == true && a.PublishDate <= DateTime.UtcNow)
                 .OrderByDescending(a => a.PublishDate)
                 .Take(5)
@@ -76,6 +80,8 @@ namespace Exe201_API.Services
 
             var relatedArticles = await _context.NewsArticles
                 .AsNoTracking()
+                .Include(a => a.Category)
+                .Include(a => a.Author)
                 .Where(a => a.IsActive == true && a.CategoryId == article.CategoryId && a.Id != article.Id)
                 .OrderByDescending(a => a.PublishDate)
                 .Take(3)
@@ -112,7 +118,7 @@ namespace Exe201_API.Services
                 Slug = slug,
                 Excerpt = dto.Excerpt,
                 Content = dto.Content,
-                CategoryId = dto.CategoryId,
+                CategoryId = dto.CategoryId ?? 1, // Default to category ID 1 if none provided
                 AuthorId = authorId,
                 ReadTime = dto.ReadTime,
                 IsFeatured = dto.IsFeatured,
@@ -122,7 +128,7 @@ namespace Exe201_API.Services
                 CreatedAt = DateTime.UtcNow
             };
 
-            if (dto.TagIds.Any())
+            if (dto.TagIds != null && dto.TagIds.Any())
             {
                 var tags = await _context.NewsTags.Where(t => dto.TagIds.Contains(t.Id)).ToListAsync();
                 newArticle.Tags = tags;
@@ -137,29 +143,40 @@ namespace Exe201_API.Services
         public async Task<NewsArticleDetailDto> UpdateArticle(int id, UpdateNewsArticleDto dto)
         {
             var article = await _context.NewsArticles
+                .Include(a => a.Category)
+                .Include(a => a.Author)
                 .Include(a => a.Tags)
                 .FirstOrDefaultAsync(a => a.Id == id);
             
             if (article == null) throw new ArgumentException("Không tìm thấy bài viết");
 
-            article.Title = dto.Title;
-            article.Slug = GenerateSlug(dto.Title);
-            article.Excerpt = dto.Excerpt;
-            article.Content = dto.Content;
-            article.CategoryId = dto.CategoryId;
-            article.ReadTime = dto.ReadTime;
-            article.IsFeatured = dto.IsFeatured;
-            article.ImageUrl = dto.ImageUrl;
-            article.IsActive = dto.IsActive;
+            // Chỉ cập nhật những field được cung cấp
+            if (!string.IsNullOrEmpty(dto.Title))
+            {
+                article.Title = dto.Title;
+                article.Slug = GenerateSlug(dto.Title);
+            }
+            if (dto.Excerpt != null) article.Excerpt = dto.Excerpt;
+            if (dto.Content != null) article.Content = dto.Content;
+            if (dto.CategoryId.HasValue) article.CategoryId = dto.CategoryId.Value;
+            if (dto.ReadTime != null) article.ReadTime = dto.ReadTime;
+            if (dto.IsFeatured.HasValue) article.IsFeatured = dto.IsFeatured.Value;
+            if (dto.ImageUrl != null) article.ImageUrl = dto.ImageUrl;
+            if (dto.IsActive.HasValue) article.IsActive = dto.IsActive.Value;
+            
             article.UpdatedAt = DateTime.UtcNow;
 
-            article.Tags.Clear();
-            if (dto.TagIds.Any())
+            // Cập nhật tags nếu được cung cấp
+            if (dto.TagIds != null)
             {
-                var tags = await _context.NewsTags.Where(t => dto.TagIds.Contains(t.Id)).ToListAsync();
-                foreach (var tag in tags)
+                article.Tags.Clear();
+                if (dto.TagIds.Any())
                 {
-                    article.Tags.Add(tag);
+                    var tags = await _context.NewsTags.Where(t => dto.TagIds.Contains(t.Id)).ToListAsync();
+                    foreach (var tag in tags)
+                    {
+                        article.Tags.Add(tag);
+                    }
                 }
             }
 
@@ -189,7 +206,7 @@ namespace Exe201_API.Services
             PublishDate = a.PublishDate,
             ReadTime = a.ReadTime,
             Category = a.Category != null ? new NewsCategoryDto { Id = a.Category.Id, Name = a.Category.Name, Slug = a.Category.Slug } : null,
-            Author = a.Author != null ? new AuthorDto { Id = a.Author.Id, Name = a.Author.Name } : null
+            Author = a.Author != null ? new AuthorDto { Id = a.Author.Id, Name = a.Author.Name, Email = a.Author.Email, Avatar = null } : null
         };
 
         private static NewsArticleDetailDto ToArticleDetailDto(NewsArticle a, List<NewsArticleDto> related) => new NewsArticleDetailDto
@@ -203,7 +220,7 @@ namespace Exe201_API.Services
             ReadTime = a.ReadTime,
             Content = a.Content,
             Category = a.Category != null ? new NewsCategoryDto { Id = a.Category.Id, Name = a.Category.Name, Slug = a.Category.Slug } : null,
-            Author = a.Author != null ? new AuthorDto { Id = a.Author.Id, Name = a.Author.Name } : null,
+            Author = a.Author != null ? new AuthorDto { Id = a.Author.Id, Name = a.Author.Name, Email = a.Author.Email, Avatar = null } : null,
             Tags = a.Tags.Select(t => new NewsTagDto { Id = t.Id, Name = t.Name, Slug = t.Slug }).ToList(),
             RelatedArticles = related
         };

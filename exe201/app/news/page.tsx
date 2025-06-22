@@ -1,128 +1,134 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Heart, Calendar, Clock, User, Search, Filter, ArrowRight, Sparkles, Eye } from "lucide-react"
+import { Heart, Calendar, Clock, User, Search, Filter, ArrowRight, Sparkles, Eye, Loader2, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { format } from "date-fns"
 import { vi } from "date-fns/locale"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
+import { newsApi, NewsArticleDto, NewsCategoryDto } from "@/app/api/services/newsApi"
+import { toast } from "sonner"
 
 export default function NewsPage() {
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string>("")
+  const [articles, setArticles] = useState<NewsArticleDto[]>([])
+  const [categories, setCategories] = useState<NewsCategoryDto[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize] = useState(12)
+  const [totalCount, setTotalCount] = useState(0)
 
-  const categories = [
-    { id: "all", name: "Tất cả", color: "bg-gray-100 text-gray-700" },
-    { id: "tips", name: "Mẹo vặt", color: "bg-blue-100 text-blue-700" },
-    { id: "health", name: "Sức khỏe", color: "bg-green-100 text-green-700" },
-    { id: "technology", name: "Công nghệ", color: "bg-purple-100 text-purple-700" },
-    { id: "company", name: "Tin công ty", color: "bg-orange-100 text-orange-700" },
-    { id: "promotion", name: "Khuyến mãi", color: "bg-red-100 text-red-700" },
-  ]
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        setError("")
 
-  const newsArticles = [
-    {
-      id: 1,
-      title: "10 Mẹo Dọn Nhà Nhanh Chóng Và Hiệu Quả",
-      excerpt: "Khám phá những bí quyết giúp bạn dọn dẹp nhà cửa một cách nhanh chóng và tiết kiệm thời gian...",
-      content:
-        "Dọn dẹp nhà cửa không cần phải mất cả ngày. Với những mẹo hay này, bạn có thể có một ngôi nhà sạch sẽ chỉ trong vài giờ.",
-      category: "tips",
-      author: "Nguyễn Thị Lan",
-      publishDate: new Date("2024-01-15"),
-      readTime: "5 phút đọc",
-      views: 1250,
-      image: "/placeholder.svg?height=200&width=400",
-      featured: true,
-    },
-    {
-      id: 2,
-      title: "Tác Hại Của Bụi Bẩn Đến Sức Khỏe Gia Đình",
-      excerpt: "Tìm hiểu về những tác hại nghiêm trọng của bụi bẩn và cách bảo vệ sức khỏe gia đình bạn...",
-      content:
-        "Bụi bẩn không chỉ làm mất thẩm mỹ mà còn ảnh hưởng nghiêm trọng đến sức khỏe, đặc biệt là trẻ em và người già.",
-      category: "health",
-      author: "BS. Trần Văn Nam",
-      publishDate: new Date("2024-01-12"),
-      readTime: "7 phút đọc",
-      views: 980,
-      image: "/placeholder.svg?height=200&width=400",
-      featured: false,
-    },
-    {
-      id: 3,
-      title: "CareU Ra Mắt Ứng Dụng Mobile Mới",
-      excerpt: "Ứng dụng CareU phiên bản mới với nhiều tính năng thông minh, giúp đặt lịch dễ dàng hơn bao giờ hết...",
-      content: "Ứng dụng CareU mới được tích hợp AI để đề xuất dịch vụ phù hợp và tối ưu hóa lịch trình làm việc.",
-      category: "company",
-      author: "CareU Team",
-      publishDate: new Date("2024-01-10"),
-      readTime: "3 phút đọc",
-      views: 2100,
-      image: "/placeholder.svg?height=200&width=400",
-      featured: true,
-    },
-    {
-      id: 4,
-      title: "Công Nghệ Robot Dọn Dẹp: Tương Lai Đã Đến",
-      excerpt:
-        "Khám phá những công nghệ robot dọn dẹp tiên tiến nhất hiện nay và xu hướng phát triển trong tương lai...",
-      content: "Robot dọn dẹp đang trở thành xu hướng mới, giúp tiết kiệm thời gian và nâng cao chất lượng cuộc sống.",
-      category: "technology",
-      author: "Lê Minh Tuấn",
-      publishDate: new Date("2024-01-08"),
-      readTime: "6 phút đọc",
-      views: 750,
-      image: "/placeholder.svg?height=200&width=400",
-      featured: false,
-    },
-    {
-      id: 5,
-      title: "Khuyến Mãi Tháng 1: Giảm 30% Dịch Vụ Dọn Cuối Năm",
-      excerpt: "Chương trình khuyến mãi đặc biệt dành cho khách hàng mới và cũ trong tháng 1/2024...",
-      content: "Nhân dịp đầu năm mới, CareU triển khai chương trình khuyến mãi hấp dẫn với mức giảm giá lên đến 30%.",
-      category: "promotion",
-      author: "CareU Marketing",
-      publishDate: new Date("2024-01-05"),
-      readTime: "2 phút đọc",
-      views: 3200,
-      image: "/placeholder.svg?height=200&width=400",
-      featured: false,
-    },
-    {
-      id: 6,
-      title: "Cách Chọn Sản Phẩm Vệ Sinh An Toàn Cho Gia Đình",
-      excerpt: "Hướng dẫn chi tiết cách lựa chọn các sản phẩm vệ sinh an toàn, thân thiện với môi trường...",
-      content: "Việc lựa chọn sản phẩm vệ sinh phù hợp không chỉ đảm bảo hiệu quả mà còn bảo vệ sức khỏe gia đình.",
-      category: "health",
-      author: "Phạm Thu Hương",
-      publishDate: new Date("2024-01-03"),
-      readTime: "8 phút đọc",
-      views: 1100,
-      image: "/placeholder.svg?height=200&width=400",
-      featured: false,
-    },
-  ]
+        await Promise.all([
+          fetchArticles(),
+          fetchCategories()
+        ])
 
-  const filteredArticles = newsArticles.filter((article) => {
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Có lỗi xảy ra'
+        setError(errorMessage)
+        toast.error(errorMessage)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  useEffect(() => {
+    fetchArticles()
+  }, [currentPage, searchTerm, categoryFilter])
+
+  const fetchArticles = async () => {
+    try {
+      const result = await newsApi.getArticles(
+        currentPage,
+        pageSize,
+        categoryFilter === 'all' ? undefined : categoryFilter
+      )
+      setArticles(result.items)
+      setTotalCount(result.totalCount)
+    } catch (err) {
+      console.error('Error fetching articles:', err)
+    }
+  }
+
+  const fetchCategories = async () => {
+    try {
+      const categoriesData = await newsApi.getCategories()
+      setCategories(categoriesData)
+    } catch (err) {
+      console.error('Error fetching categories:', err)
+    }
+  }
+
+  const filteredArticles = articles.filter((article) => {
     const matchesSearch =
       article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      article.excerpt.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = categoryFilter === "all" || article.category === categoryFilter
-    return matchesSearch && matchesCategory
+      (article.excerpt && article.excerpt.toLowerCase().includes(searchTerm.toLowerCase()))
+    return matchesSearch
   })
 
-  const featuredArticles = filteredArticles.filter((article) => article.featured)
-  const regularArticles = filteredArticles.filter((article) => !article.featured)
+  const featuredArticles = filteredArticles.filter((article) => article.isActive)
+  const regularArticles = filteredArticles.filter((article) => !article.isActive)
 
-  const getCategoryInfo = (categoryId: string) => {
-    return categories.find((cat) => cat.id === categoryId) || categories[0]
+  const getCategoryInfo = (categoryId: number) => {
+    const category = categories.find((cat) => cat.id === categoryId)
+    if (!category) return { name: "Khác", color: "bg-gray-100 text-gray-700" }
+
+    const colorMap: { [key: string]: string } = {
+      "tips": "bg-blue-100 text-blue-700",
+      "health": "bg-green-100 text-green-700",
+      "technology": "bg-purple-100 text-purple-700",
+      "company": "bg-orange-100 text-orange-700",
+      "promotion": "bg-red-100 text-red-700"
+    }
+
+    return {
+      name: category.name,
+      color: colorMap[category.slug] || "bg-gray-100 text-gray-700"
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 mx-auto mb-4 animate-spin text-blue-600" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Đang tải tin tức...</h2>
+          <p className="text-gray-600">Vui lòng chờ trong giây lát</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="h-12 w-12 mx-auto mb-4 text-red-600" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Không thể tải tin tức</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>
+            Thử lại
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -174,8 +180,9 @@ export default function NewsPage() {
                 <SelectValue placeholder="Chọn danh mục" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">Tất cả danh mục</SelectItem>
                 {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
+                  <SelectItem key={category.id} value={category.slug}>
                     {category.name}
                   </SelectItem>
                 ))}
@@ -185,20 +192,32 @@ export default function NewsPage() {
 
           {/* Category Tags */}
           <div className="flex flex-wrap gap-2 mb-8">
-            {categories.map((category) => (
-              <Badge
-                key={category.id}
-                variant={categoryFilter === category.id ? "default" : "outline"}
-                className={`cursor-pointer transition-all duration-200 ${
-                  categoryFilter === category.id
-                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
-                    : "hover:bg-gray-100"
+            <Badge
+              variant={categoryFilter === "all" ? "default" : "outline"}
+              className={`cursor-pointer transition-all duration-200 ${categoryFilter === "all"
+                  ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                  : "hover:bg-gray-100"
                 }`}
-                onClick={() => setCategoryFilter(category.id)}
-              >
-                {category.name}
-              </Badge>
-            ))}
+              onClick={() => setCategoryFilter("all")}
+            >
+              Tất cả
+            </Badge>
+            {categories.map((category) => {
+              const categoryInfo = getCategoryInfo(category.id)
+              return (
+                <Badge
+                  key={category.id}
+                  variant={categoryFilter === category.slug ? "default" : "outline"}
+                  className={`cursor-pointer transition-all duration-200 ${categoryFilter === category.slug
+                      ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                      : "hover:bg-gray-100"
+                    }`}
+                  onClick={() => setCategoryFilter(category.slug)}
+                >
+                  {category.name}
+                </Badge>
+              )
+            })}
           </div>
         </div>
       </section>
@@ -213,8 +232,8 @@ export default function NewsPage() {
               </span>
             </h2>
             <div className="grid md:grid-cols-2 gap-8">
-              {featuredArticles.map((article) => {
-                const categoryInfo = getCategoryInfo(article.category)
+              {featuredArticles.slice(0, 2).map((article) => {
+                const categoryInfo = article.category ? getCategoryInfo(article.category.id) : { name: "Khác", color: "bg-gray-100 text-gray-700" }
                 return (
                   <Card
                     key={article.id}
@@ -222,7 +241,7 @@ export default function NewsPage() {
                   >
                     <div className="relative">
                       <img
-                        src={article.image || "/placeholder.svg"}
+                        src={article.imageUrl || "/placeholder.svg"}
                         alt={article.title}
                         className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                       />
@@ -247,21 +266,17 @@ export default function NewsPage() {
                         <div className="flex items-center space-x-4">
                           <div className="flex items-center">
                             <User className="w-4 h-4 mr-1" />
-                            {article.author}
+                            {article.author?.name || "CareU"}
                           </div>
                           <div className="flex items-center">
                             <Calendar className="w-4 h-4 mr-1" />
-                            {format(article.publishDate, "dd/MM/yyyy", { locale: vi })}
+                            {format(new Date(article.publishDate), "dd/MM/yyyy", { locale: vi })}
                           </div>
                         </div>
                         <div className="flex items-center space-x-3">
                           <div className="flex items-center">
                             <Clock className="w-4 h-4 mr-1" />
-                            {article.readTime}
-                          </div>
-                          <div className="flex items-center">
-                            <Eye className="w-4 h-4 mr-1" />
-                            {article.views}
+                            {article.readTime || "5 phút đọc"}
                           </div>
                         </div>
                       </div>
@@ -292,7 +307,7 @@ export default function NewsPage() {
             </span>
           </h2>
 
-          {regularArticles.length === 0 ? (
+          {filteredArticles.length === 0 ? (
             <Card className="text-center py-12">
               <CardContent>
                 <div className="text-6xl mb-4">📰</div>
@@ -302,8 +317,8 @@ export default function NewsPage() {
             </Card>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {regularArticles.map((article) => {
-                const categoryInfo = getCategoryInfo(article.category)
+              {filteredArticles.map((article) => {
+                const categoryInfo = article.category ? getCategoryInfo(article.category.id) : { name: "Khác", color: "bg-gray-100 text-gray-700" }
                 return (
                   <Card
                     key={article.id}
@@ -311,7 +326,7 @@ export default function NewsPage() {
                   >
                     <div className="relative">
                       <img
-                        src={article.image || "/placeholder.svg"}
+                        src={article.imageUrl || "/placeholder.svg"}
                         alt={article.title}
                         className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
                       />
@@ -331,21 +346,17 @@ export default function NewsPage() {
                       <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
                         <div className="flex items-center">
                           <User className="w-3 h-3 mr-1" />
-                          {article.author}
+                          {article.author?.name || "CareU"}
                         </div>
                         <div className="flex items-center">
                           <Calendar className="w-3 h-3 mr-1" />
-                          {format(article.publishDate, "dd/MM", { locale: vi })}
+                          {format(new Date(article.publishDate), "dd/MM", { locale: vi })}
                         </div>
                       </div>
                       <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
                         <div className="flex items-center">
                           <Clock className="w-3 h-3 mr-1" />
-                          {article.readTime}
-                        </div>
-                        <div className="flex items-center">
-                          <Eye className="w-3 h-3 mr-1" />
-                          {article.views}
+                          {article.readTime || "5 phút đọc"}
                         </div>
                       </div>
                       <Button

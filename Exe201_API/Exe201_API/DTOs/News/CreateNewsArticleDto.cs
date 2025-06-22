@@ -14,8 +14,7 @@ namespace Exe201_API.DTOs.News
 
         public string? Content { get; set; }
 
-        [Required]
-        public int CategoryId { get; set; }
+        public int? CategoryId { get; set; }
 
         public string? ReadTime { get; set; }
         
@@ -28,7 +27,16 @@ namespace Exe201_API.DTOs.News
         public List<int> TagIds { get; set; } = new List<int>();
     }
 
-    public class UpdateNewsArticleDto : CreateNewsArticleDto
+    public class UpdateNewsArticleDto
     {
+        public string? Title { get; set; }
+        public string? Excerpt { get; set; }
+        public string? Content { get; set; }
+        public int? CategoryId { get; set; }
+        public string? ReadTime { get; set; }
+        public bool? IsFeatured { get; set; }
+        public string? ImageUrl { get; set; }
+        public bool? IsActive { get; set; }
+        public List<int>? TagIds { get; set; }
     }
 } 

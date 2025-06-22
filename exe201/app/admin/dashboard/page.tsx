@@ -1,670 +1,745 @@
 "use client"
-
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Users, Calendar, DollarSign, CheckCircle, X, Search, Filter } from "lucide-react"
-import { format } from "date-fns"
-import { vi } from "date-fns/locale"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+    Users,
+    UserCheck,
+    Calendar,
+    DollarSign,
+    TrendingUp,
+    Eye,
+    Edit,
+    Loader2,
+    AlertCircle,
+    FileText,
+} from "lucide-react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+import { adminApi, AdminDashboardStatsDto, BookingDto, CustomerDto, CleanerDto, BillDto } from "@/app/api/services/adminApi"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from "@/components/ui/dialog"
 import Header from "@/components/header"
+import Link from "next/link"
 
-export default function AdminDashboard() {
-  const [user, setUser] = useState<any>(null)
-  const [users, setUsers] = useState<any[]>([])
-  const [bookings, setBookings] = useState<any[]>([])
-  const [cleaners, setCleaners] = useState<any[]>([])
-  const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const router = useRouter()
-  const [bills, setBills] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
+export default function AdminDashboardPage() {
+    const router = useRouter()
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string>("")
 
-  useEffect(() => {
-    try {
-      const currentUser = localStorage.getItem("currentUser")
-      console.log("Current user from localStorage:", currentUser) // Debug log
+    // Dashboard stats
+    const [stats, setStats] = useState<AdminDashboardStatsDto | null>(null)
 
-      if (!currentUser) {
-        console.log("No user found, redirecting to login")
-        router.push("/login")
-        return
-      }
+    // Data for tabs
+    const [bookings, setBookings] = useState<BookingDto[]>([])
+    const [customers, setCustomers] = useState<CustomerDto[]>([])
+    const [cleaners, setCleaners] = useState<CleanerDto[]>([])
+    const [bills, setBills] = useState<BillDto[]>([])
 
-      const userData = JSON.parse(currentUser)
-      console.log("User data:", userData) // Debug log
+    // Pagination and filters
+    const [currentPage, setCurrentPage] = useState(1)
+    const [pageSize] = useState(10)
+    const [searchTerm, setSearchTerm] = useState("")
+    const [statusFilter, setStatusFilter] = useState("all")
 
-      if (userData.role !== "admin") {
-        console.log("User is not admin, redirecting to home")
-        setError(`Bạn không có quyền truy cập. Role hiện tại: ${userData.role}`)
-        setTimeout(() => router.push("/"), 2000)
-        return
-      }
+    // State for managing cleaner status update
+    const [selectedCleaner, setSelectedCleaner] = useState<CleanerDto | null>(null)
+    const [isStatusModalOpen, setIsStatusModalOpen] = useState(false)
+    const [newCleanerStatus, setNewCleanerStatus] = useState("")
+    const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
 
-      setUser(userData)
-      loadData()
-      setLoading(false)
+    // State for managing booking detail view
+    const [selectedBooking, setSelectedBooking] = useState<BookingDto | null>(null)
+    const [isBookingDetailModalOpen, setIsBookingDetailModalOpen] = useState(false)
+    const [isLoadingBookingDetail, setIsLoadingBookingDetail] = useState(false)
 
-      // Initialize fake bills if not exists
-      const existingBills = localStorage.getItem("bills")
-      if (!existingBills) {
-        const fakeBills = [
-          {
-            id: 1,
-            date: "2025-05-29",
-            customerEmail: "nguyenductanmdsl@gmail.com",
-            amount: 119000,
-            billId: "00001",
-            status: "paid",
-          },
-          {
-            id: 2,
-            date: "2025-05-30",
-            customerEmail: "namkhanhdz123@gmail.com",
-            amount: 119000,
-            billId: "00002",
-            status: "paid",
-          },
-          {
-            id: 3,
-            date: "2025-05-31",
-            customerEmail: "quy77889@gmail.com",
-            amount: 149000,
-            billId: "00003",
-            status: "paid",
-          },
-          {
-            id: 4,
-            date: "2025-06-01",
-            customerEmail: "nguyenquangyinhzz@gmail.com",
-            amount: 119000,
-            billId: "00004",
-            status: "paid",
-          },
-          {
-            id: 5,
-            date: "2025-06-02",
-            customerEmail: "huynhthaikhang@gmail.com",
-            amount: 119000,
-            billId: "00005",
-            status: "paid",
-          },
-          {
-            id: 6,
-            date: "2025-06-03",
-            customerEmail: "dat8948@gmail.com",
-            amount: 119000,
-            billId: "00006",
-            status: "paid",
-          },
-          {
-            id: 7,
-            date: "2025-06-07",
-            customerEmail: "thanhd2006@gmail.com",
-            amount: 149000,
-            billId: "00007",
-            status: "paid",
-          },
-          {
-            id: 8,
-            date: "2025-06-07",
-            customerEmail: "hinhvonkuv1987az@gmail.com",
-            amount: 149000,
-            billId: "00008",
-            status: "paid",
-          },
-          {
-            id: 9,
-            date: "2025-06-08",
-            customerEmail: "kingppfa2006@gmail.com",
-            amount: 119000,
-            billId: "00009",
-            status: "paid",
-          },
-          {
-            id: 10,
-            date: "2025-06-08",
-            customerEmail: "vonhatduy07082k6@gmail.com",
-            amount: 149000,
-            billId: "00010",
-            status: "paid",
-          },
-          {
-            id: 11,
-            date: "2025-06-08",
-            customerEmail: "tiennhien2k6@gmail.com",
-            amount: 149000,
-            billId: "00011",
-            status: "paid",
-          },
-          {
-            id: 12,
-            date: "2025-06-09",
-            customerEmail: "ngkhanh2002zz@gmail.com",
-            amount: 119000,
-            billId: "00012",
-            status: "paid",
-          },
-          {
-            id: 13,
-            date: "2025-06-10",
-            customerEmail: "vanlinh2k666@gmail.com",
-            amount: 149000,
-            billId: "00013",
-            status: "paid",
-          },
-          {
-            id: 14,
-            date: "2025-06-11",
-            customerEmail: "ngthaoguyen77@gmail.com",
-            amount: 119000,
-            billId: "00014",
-            status: "paid",
-          },
-          {
-            id: 15,
-            date: "2025-06-14",
-            customerEmail: "vnaxkonchiem111@gmail.com",
-            amount: 149000,
-            billId: "00015",
-            status: "paid",
-          },
-          {
-            id: 16,
-            date: "2025-06-14",
-            customerEmail: "thangnhgien1964@gmail.com",
-            amount: 119000,
-            billId: "00016",
-            status: "paid",
-          },
-          {
-            id: 17,
-            date: "2025-06-14",
-            customerEmail: "vanzzlinh@gmail.com",
-            amount: 149000,
-            billId: "00017",
-            status: "paid",
-          },
-          {
-            id: 18,
-            date: "2025-06-15",
-            customerEmail: "holyalone123@gmail.com",
-            amount: 119000,
-            billId: "00018",
-            status: "paid",
-          },
-          {
-            id: 19,
-            date: "2025-06-15",
-            customerEmail: "tandat193@gmail.com",
-            amount: 278000,
-            billId: "00019",
-            status: "paid",
-          },
-          {
-            id: 20,
-            date: "2025-06-15",
-            customerEmail: "vongvinhphuc1808@gmail.com",
-            amount: 149000,
-            billId: "00020",
-            status: "paid",
-          },
-          {
-            id: 21,
-            date: "2025-06-18",
-            customerEmail: "nhkhiem12@gmail.com",
-            amount: 149000,
-            billId: "00021",
-            status: "paid",
-          },
-        ]
-        localStorage.setItem("bills", JSON.stringify(fakeBills))
-      }
-    } catch (err) {
-      console.error("Error in useEffect:", err)
-      setError("Có lỗi xảy ra khi tải dữ liệu")
-      setLoading(false)
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                setLoading(true)
+                setError("")
+
+                const token = localStorage.getItem('token')
+                if (!token) {
+                    router.push('/login')
+                    return
+                }
+
+                // Fetch dashboard stats
+                const dashboardStats = await adminApi.getDashboardStats(token)
+                setStats(dashboardStats)
+
+                // Fetch initial data
+                await Promise.all([
+                    fetchBookings(token),
+                    fetchCustomers(token),
+                    fetchCleaners(token),
+                    fetchBills(token)
+                ])
+
+            } catch (err) {
+                const errorMessage = err instanceof Error ? err.message : 'Có lỗi xảy ra'
+                setError(errorMessage)
+                toast.error(errorMessage)
+
+                if (errorMessage.includes('token không hợp lệ')) {
+                    localStorage.removeItem('token')
+                    router.push('/login')
+                }
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchDashboardData()
+    }, [router])
+
+    useEffect(() => {
+        const token = localStorage.getItem('token')
+        if (token) {
+            fetchBookings(token)
+        }
+    }, [currentPage, searchTerm, statusFilter])
+
+    const fetchBookings = async (token: string) => {
+        try {
+            const result = await adminApi.getAllBookings(token, currentPage, pageSize, searchTerm, statusFilter === 'all' ? undefined : statusFilter)
+            setBookings(result.bookings)
+        } catch (err) {
+            console.error('Error fetching bookings:', err)
+        }
     }
-  }, [router])
 
-  const loadData = () => {
-    const allUsers = JSON.parse(localStorage.getItem("users") || "[]")
-    const allBookings = JSON.parse(localStorage.getItem("bookings") || "[]")
-    const allBills = JSON.parse(localStorage.getItem("bills") || "[]")
-
-    setUsers(allUsers.filter((u: any) => u.role === "user"))
-    setCleaners(allUsers.filter((u: any) => u.role === "cleaner"))
-    setBookings(allBookings)
-    setBills(allBills)
-  }
-
-  const updateCleanerStatus = (cleanerId: number, newStatus: string) => {
-    const allUsers = JSON.parse(localStorage.getItem("users") || "[]")
-    const updatedUsers = allUsers.map((user: any) => {
-      if (user.id === cleanerId) {
-        return { ...user, status: newStatus }
-      }
-      return user
-    })
-
-    localStorage.setItem("users", JSON.stringify(updatedUsers))
-    loadData()
-  }
-
-  const updateBookingStatus = (bookingId: number, newStatus: string) => {
-    const allBookings = JSON.parse(localStorage.getItem("bookings") || "[]")
-    const updatedBookings = allBookings.map((booking: any) => {
-      if (booking.id === bookingId) {
-        return { ...booking, status: newStatus }
-      }
-      return booking
-    })
-
-    localStorage.setItem("bookings", JSON.stringify(updatedBookings))
-    loadData()
-  }
-
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      pending: { label: "Chờ xử lý", variant: "secondary" as const },
-      active: { label: "Hoạt động", variant: "default" as const },
-      confirmed: { label: "Đã xác nhận", variant: "default" as const },
-      in_progress: { label: "Đang thực hiện", variant: "default" as const },
-      completed: { label: "Hoàn thành", variant: "default" as const },
-      cancelled: { label: "Đã hủy", variant: "destructive" as const },
+    const fetchCustomers = async (token: string) => {
+        try {
+            const customersData = await adminApi.getAllCustomers(token)
+            setCustomers(customersData)
+        } catch (err) {
+            console.error('Error fetching customers:', err)
+        }
     }
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending
-    return <Badge variant={config.variant}>{config.label}</Badge>
-  }
 
-  const getServiceName = (serviceType: string) => {
-    const services = {
-      "home-regular": "Dọn Nhà Định Kỳ",
-      office: "Dọn Văn Phòng",
-      "post-construction": "Dọn Sau Xây Dựng",
-      "year-end": "Dọn Cuối Năm",
+    const fetchCleaners = async (token: string) => {
+        try {
+            const cleanersData = await adminApi.getAllCleaners(token)
+            setCleaners(cleanersData)
+        } catch (err) {
+            console.error('Error fetching cleaners:', err)
+        }
     }
-    return services[serviceType as keyof typeof services] || serviceType
-  }
 
-  const filteredBookings = bookings.filter((booking) => {
-    const matchesSearch =
-      booking.contactName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.id.toString().includes(searchTerm)
-    const matchesStatus = statusFilter === "all" || booking.status === statusFilter
-    return matchesSearch && matchesStatus
-  })
+    const fetchBills = async (token: string) => {
+        try {
+            const billsData = await adminApi.getAllBills(token)
+            setBills(billsData)
+        } catch (err) {
+            console.error('Error fetching bills:', err)
+        }
+    }
 
-  const totalRevenue = bookings.filter((b) => b.status === "completed").reduce((sum, b) => sum + (b.totalPrice || 0), 0)
+    const handleOpenStatusModal = (cleaner: CleanerDto) => {
+        setSelectedCleaner(cleaner)
+        setNewCleanerStatus(cleaner.status)
+        setIsStatusModalOpen(true)
+    }
 
-  if (loading) {
+    const handleUpdateCleanerStatus = async () => {
+        if (!selectedCleaner || !newCleanerStatus) return
+
+        const token = localStorage.getItem('token')
+        if (!token) {
+            toast.error("Bạn chưa đăng nhập.")
+            router.push('/login')
+            return
+        }
+
+        setIsUpdatingStatus(true)
+        try {
+            await adminApi.updateCleanerStatus(token, selectedCleaner.id, newCleanerStatus)
+            toast.success("Cập nhật trạng thái nhân viên thành công!")
+            // Refresh cleaner list
+            fetchCleaners(token)
+            setIsStatusModalOpen(false)
+            setSelectedCleaner(null)
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Có lỗi xảy ra khi cập nhật'
+            toast.error(errorMessage)
+        } finally {
+            setIsUpdatingStatus(false)
+        }
+    }
+
+    const handleViewBookingDetail = async (booking: BookingDto) => {
+        setSelectedBooking(booking)
+        setIsBookingDetailModalOpen(true)
+
+        const token = localStorage.getItem('token')
+        if (!token) {
+            toast.error("Bạn chưa đăng nhập.")
+            router.push('/login')
+            return
+        }
+
+        setIsLoadingBookingDetail(true)
+        try {
+            const bookingDetail = await adminApi.getBookingById(token, booking.id)
+            setSelectedBooking(bookingDetail)
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Có lỗi xảy ra khi tải chi tiết'
+            toast.error(errorMessage)
+            setIsBookingDetailModalOpen(false)
+        } finally {
+            setIsLoadingBookingDetail(false)
+        }
+    }
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case "completed":
+                return "bg-green-100 text-green-700 border-green-200"
+            case "in_progress":
+                return "bg-blue-100 text-blue-700 border-blue-200"
+            case "confirmed":
+                return "bg-orange-100 text-orange-700 border-orange-200"
+            case "pending":
+                return "bg-yellow-100 text-yellow-700 border-yellow-200"
+            case "cancelled":
+                return "bg-red-100 text-red-700 border-red-200"
+            default:
+                return "bg-gray-100 text-gray-700 border-gray-200"
+        }
+    }
+
+    const getStatusText = (status: string) => {
+        switch (status) {
+            case "completed":
+                return "Hoàn thành"
+            case "in_progress":
+                return "Đang thực hiện"
+            case "confirmed":
+                return "Đã xác nhận"
+            case "pending":
+                return "Chờ xác nhận"
+            case "cancelled":
+                return "Đã hủy"
+            default:
+                return status
+        }
+    }
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+                <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+                    <p className="text-gray-600">Đang tải dashboard...</p>
+                </div>
+            </div>
+        )
+    }
+
+    if (error || !stats) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+                <div className="text-center">
+                    <AlertCircle className="h-12 w-12 mx-auto mb-4 text-red-600" />
+                    <h2 className="text-xl font-semibold text-gray-900 mb-2">Không thể tải dashboard</h2>
+                    <p className="text-gray-600 mb-4">{error || 'Có lỗi xảy ra'}</p>
+                    <Button onClick={() => window.location.reload()}>
+                        Thử lại
+                    </Button>
+                </div>
+            </div>
+        )
+    }
+
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-lg text-gray-600">Đang tải dữ liệu...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>
-          <Button onClick={() => router.push("/login")}>Đăng nhập lại</Button>
-        </div>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg text-gray-600 mb-4">Không tìm thấy thông tin người dùng</p>
-          <Button onClick={() => router.push("/login")}>Đăng nhập</Button>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-      <Header />
-
-      <div className="pt-20 pb-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          {/* Welcome Section */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Bảng Điều Khiển Quản Trị</h1>
-            <p className="text-gray-600">Quản lý toàn bộ hệ thống dịch vụ dọn vệ sinh</p>
-          </div>
-
-          {/* Quick Stats */}
-          <div className="grid md:grid-cols-4 gap-6 mb-8">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Tổng khách hàng</p>
-                    <p className="text-2xl font-bold">{users.length}</p>
-                  </div>
-                  <Users className="w-8 h-8 text-blue-600" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Nhân viên</p>
-                    <p className="text-2xl font-bold">{cleaners.length}</p>
-                  </div>
-                  <Users className="w-8 h-8 text-green-600" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Tổng đơn hàng</p>
-                    <p className="text-2xl font-bold">{bookings.length}</p>
-                  </div>
-                  <Calendar className="w-8 h-8 text-purple-600" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Doanh thu</p>
-                    <p className="text-2xl font-bold">{totalRevenue.toLocaleString("vi-VN")}đ</p>
-                  </div>
-                  <DollarSign className="w-8 h-8 text-yellow-600" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Tabs defaultValue="bookings" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="bookings">Đơn Đặt Lịch</TabsTrigger>
-              <TabsTrigger value="cleaners">Nhân Viên</TabsTrigger>
-              <TabsTrigger value="customers">Khách Hàng</TabsTrigger>
-              <TabsTrigger value="analytics">Thống Kê</TabsTrigger>
-              <TabsTrigger value="bills">Hóa Đơn</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="bookings" className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold">Quản Lý Đơn Đặt Lịch</h2>
-              </div>
-
-              {/* Filters */}
-              <div className="flex gap-4 mb-6">
-                <div className="relative flex-1 max-w-sm">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    placeholder="Tìm kiếm theo tên, địa chỉ, mã đơn..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-48">
-                    <Filter className="w-4 h-4 mr-2" />
-                    <SelectValue placeholder="Lọc theo trạng thái" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tất cả trạng thái</SelectItem>
-                    <SelectItem value="pending">Chờ xử lý</SelectItem>
-                    <SelectItem value="confirmed">Đã xác nhận</SelectItem>
-                    <SelectItem value="in_progress">Đang thực hiện</SelectItem>
-                    <SelectItem value="completed">Hoàn thành</SelectItem>
-                    <SelectItem value="cancelled">Đã hủy</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Card>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Mã đơn</TableHead>
-                      <TableHead>Khách hàng</TableHead>
-                      <TableHead>Dịch vụ</TableHead>
-                      <TableHead>Ngày</TableHead>
-                      <TableHead>Giá trị</TableHead>
-                      <TableHead>Trạng thái</TableHead>
-                      <TableHead>Thao tác</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredBookings.map((booking) => (
-                      <TableRow key={booking.id}>
-                        <TableCell className="font-medium">#{booking.id}</TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">{booking.contactName}</p>
-                            <p className="text-sm text-gray-500">{booking.contactPhone}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>{getServiceName(booking.serviceType)}</TableCell>
-                        <TableCell>
-                          {booking.date
-                            ? format(new Date(booking.date), "dd/MM/yyyy", { locale: vi })
-                            : "Chưa xác định"}
-                        </TableCell>
-                        <TableCell>{booking.totalPrice?.toLocaleString("vi-VN")}đ</TableCell>
-                        <TableCell>{getStatusBadge(booking.status)}</TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            {booking.status === "pending" && (
-                              <>
-                                <Button size="sm" onClick={() => updateBookingStatus(booking.id, "confirmed")}>
-                                  <CheckCircle className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => updateBookingStatus(booking.id, "cancelled")}
-                                >
-                                  <X className="w-4 h-4" />
-                                </Button>
-                              </>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="cleaners" className="space-y-6">
-              <h2 className="text-2xl font-bold">Quản Lý Nhân Viên</h2>
-
-              <Card>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Tên nhân viên</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Điện thoại</TableHead>
-                      <TableHead>Kinh nghiệm</TableHead>
-                      <TableHead>Trạng thái</TableHead>
-                      <TableHead>Thao tác</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {cleaners.map((cleaner) => (
-                      <TableRow key={cleaner.id}>
-                        <TableCell className="font-medium">{cleaner.name}</TableCell>
-                        <TableCell>{cleaner.email}</TableCell>
-                        <TableCell>{cleaner.phone}</TableCell>
-                        <TableCell>{cleaner.experience}</TableCell>
-                        <TableCell>{getStatusBadge(cleaner.status)}</TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            {cleaner.status === "pending" && (
-                              <>
-                                <Button size="sm" onClick={() => updateCleanerStatus(cleaner.id, "active")}>
-                                  <CheckCircle className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => updateCleanerStatus(cleaner.id, "rejected")}
-                                >
-                                  <X className="w-4 h-4" />
-                                </Button>
-                              </>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="customers" className="space-y-6">
-              <h2 className="text-2xl font-bold">Quản Lý Khách Hàng</h2>
-
-              <Card>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Tên khách hàng</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Điện thoại</TableHead>
-                      <TableHead>Địa chỉ</TableHead>
-                      <TableHead>Ngày đăng ký</TableHead>
-                      <TableHead>Số đơn hàng</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {users.map((customer) => (
-                      <TableRow key={customer.id}>
-                        <TableCell className="font-medium">{customer.name}</TableCell>
-                        <TableCell>{customer.email}</TableCell>
-                        <TableCell>{customer.phone}</TableCell>
-                        <TableCell>{customer.address}</TableCell>
-                        <TableCell>
-                          {customer.createdAt
-                            ? format(new Date(customer.createdAt), "dd/MM/yyyy", { locale: vi })
-                            : "N/A"}
-                        </TableCell>
-                        <TableCell>{bookings.filter((b) => b.userId === customer.id).length}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="analytics" className="space-y-6">
-              <h2 className="text-2xl font-bold">Thống Kê & Báo Cáo</h2>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Thống kê đơn hàng theo trạng thái</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {["pending", "confirmed", "in_progress", "completed", "cancelled"].map((status) => {
-                        const count = bookings.filter((b) => b.status === status).length
-                        const percentage = bookings.length > 0 ? ((count / bookings.length) * 100).toFixed(1) : 0
-                        return (
-                          <div key={status} className="flex justify-between items-center">
-                            <div className="flex items-center gap-2">{getStatusBadge(status)}</div>
-                            <div className="text-right">
-                              <div className="font-semibold">{count}</div>
-                              <div className="text-sm text-gray-500">{percentage}%</div>
+        <>
+            <Header />
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 pt-20">
+                <div className="container mx-auto px-4 py-8">
+                    {/* Header */}
+                    <div className="mb-8">
+                        <div className="flex justify-between items-center mb-4">
+                            <div>
+                                <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+                                <p className="text-gray-600">Quản lý hệ thống dịch vụ dọn dẹp</p>
                             </div>
-                          </div>
-                        )
-                      })}
+                            <Button asChild>
+                                <Link href="/admin/news">
+                                    <FileText className="h-4 w-4 mr-2" />
+                                    Quản lý Tin tức
+                                </Link>
+                            </Button>
+                        </div>
                     </div>
-                  </CardContent>
-                </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Doanh thu theo dịch vụ</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {["home-regular", "office", "post-construction", "year-end"].map((serviceType) => {
-                        const revenue = bookings
-                          .filter((b) => b.serviceType === serviceType && b.status === "completed")
-                          .reduce((sum, b) => sum + (b.totalPrice || 0), 0)
-                        return (
-                          <div key={serviceType} className="flex justify-between items-center">
-                            <div>{getServiceName(serviceType)}</div>
-                            <div className="font-semibold">{revenue.toLocaleString("vi-VN")}đ</div>
-                          </div>
-                        )
-                      })}
+                    {/* Stats Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Tổng khách hàng</CardTitle>
+                                <Users className="h-4 w-4 text-blue-600" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold text-blue-600">{stats.totalCustomers}</div>
+                                <p className="text-xs text-gray-600">Khách hàng đã đăng ký</p>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Tổng nhân viên</CardTitle>
+                                <UserCheck className="h-4 w-4 text-green-600" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold text-green-600">{stats.totalCleaners}</div>
+                                <p className="text-xs text-gray-600">
+                                    {stats.activeCleaners} đang hoạt động, {stats.pendingCleaners} chờ duyệt
+                                </p>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Tổng đơn hàng</CardTitle>
+                                <Calendar className="h-4 w-4 text-orange-600" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold text-orange-600">{stats.totalBookings}</div>
+                                <p className="text-xs text-gray-600">
+                                    {stats.recentBookings} đơn hàng mới (7 ngày qua)
+                                </p>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Tổng doanh thu</CardTitle>
+                                <DollarSign className="h-4 w-4 text-purple-600" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold text-purple-600">
+                                    {stats.totalRevenue.toLocaleString('vi-VN')} VNĐ
+                                </div>
+                                <p className="text-xs text-gray-600">
+                                    {stats.recentRevenue.toLocaleString('vi-VN')} VNĐ (7 ngày qua)
+                                </p>
+                            </CardContent>
+                        </Card>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
 
-            <TabsContent value="bills" className="space-y-6">
-              <h2 className="text-2xl font-bold">Quản Lý Hóa Đơn</h2>
+                    {/* Charts Section */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        {/* Booking Status Chart */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <TrendingUp className="h-5 w-5 text-blue-600" />
+                                    Trạng thái đơn hàng
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-3">
+                                    {stats.bookingsByStatus && Object.entries(stats.bookingsByStatus).map(([status, count]) => (
+                                        <div key={status} className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <Badge className={getStatusColor(status)}>
+                                                    {getStatusText(status)}
+                                                </Badge>
+                                            </div>
+                                            <span className="font-semibold">{count}</span>
+                                        </div>
+                                    ))}
+                                    {(!stats.bookingsByStatus || Object.keys(stats.bookingsByStatus).length === 0) && (
+                                        <p className="text-gray-500 text-center py-4">Chưa có dữ liệu trạng thái đơn hàng</p>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
 
-              <Card>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Ngày</TableHead>
-                      <TableHead>Email khách hàng</TableHead>
-                      <TableHead>Số tiền</TableHead>
-                      <TableHead>Mã hóa đơn</TableHead>
-                      <TableHead>Trạng thái</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {bills.map((bill) => (
-                      <TableRow key={bill.id}>
-                        <TableCell>{format(new Date(bill.date), "dd/MM/yyyy", { locale: vi })}</TableCell>
-                        <TableCell>{bill.customerEmail}</TableCell>
-                        <TableCell>{bill.amount.toLocaleString("vi-VN")}đ</TableCell>
-                        <TableCell>#{bill.billId}</TableCell>
-                        <TableCell>
-                          <Badge variant={bill.status === "paid" ? "default" : "secondary"}>
-                            {bill.status === "paid" ? "Đã thanh toán" : "Chưa thanh toán"}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
-    </div>
-  )
+                        {/* Revenue by Service */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <DollarSign className="h-5 w-5 text-green-600" />
+                                    Doanh thu theo dịch vụ
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-3">
+                                    {stats.revenueByService && Object.entries(stats.revenueByService).map(([service, revenue]) => (
+                                        <div key={service} className="flex items-center justify-between">
+                                            <span className="text-sm text-gray-600">{service}</span>
+                                            <span className="font-semibold text-green-600">
+                                                {revenue.toLocaleString('vi-VN')} VNĐ
+                                            </span>
+                                        </div>
+                                    ))}
+                                    {(!stats.revenueByService || Object.keys(stats.revenueByService).length === 0) && (
+                                        <p className="text-gray-500 text-center py-4">Chưa có dữ liệu doanh thu theo dịch vụ</p>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Data Tables */}
+                    <Tabs defaultValue="bookings" className="space-y-6">
+                        <TabsList className="grid w-full grid-cols-4">
+                            <TabsTrigger value="bookings">Đơn hàng</TabsTrigger>
+                            <TabsTrigger value="customers">Khách hàng</TabsTrigger>
+                            <TabsTrigger value="cleaners">Nhân viên</TabsTrigger>
+                            {/* <TabsTrigger value="bills">Hóa đơn</TabsTrigger> */}
+                        </TabsList>
+
+                        {/* Bookings Tab */}
+                        <TabsContent value="bookings" className="space-y-4">
+                            <div className="flex gap-4 mb-4">
+                                <div className="flex-1">
+                                    <Input
+                                        placeholder="Tìm kiếm đơn hàng..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="max-w-sm"
+                                    />
+                                </div>
+                                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                    <SelectTrigger className="w-[180px]">
+                                        <SelectValue placeholder="Lọc theo trạng thái" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Tất cả</SelectItem>
+                                        <SelectItem value="pending">Chờ xác nhận</SelectItem>
+                                        <SelectItem value="confirmed">Đã xác nhận</SelectItem>
+                                        <SelectItem value="in_progress">Đang thực hiện</SelectItem>
+                                        <SelectItem value="completed">Hoàn thành</SelectItem>
+                                        <SelectItem value="cancelled">Đã hủy</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Danh sách đơn hàng</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>ID</TableHead>
+                                                <TableHead>Khách hàng</TableHead>
+                                                <TableHead>Dịch vụ</TableHead>
+                                                <TableHead>Ngày đặt</TableHead>
+                                                <TableHead>Tổng tiền</TableHead>
+                                                <TableHead>Trạng thái</TableHead>
+                                                <TableHead>Thao tác</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {bookings && bookings.length > 0 ? bookings.map((booking) => (
+                                                <TableRow key={booking.id}>
+                                                    <TableCell>#{booking.id}</TableCell>
+                                                    <TableCell>{booking.userName}</TableCell>
+                                                    <TableCell>{booking.serviceName}</TableCell>
+                                                    <TableCell>{new Date(booking.bookingDate).toLocaleDateString('vi-VN')}</TableCell>
+                                                    <TableCell>{booking.totalPrice.toLocaleString('vi-VN')} VNĐ</TableCell>
+                                                    <TableCell>
+                                                        <Badge className={getStatusColor(booking.status)}>
+                                                            {getStatusText(booking.status)}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Button variant="ghost" size="sm" onClick={() => handleViewBookingDetail(booking)}>
+                                                            <Eye className="h-4 w-4" />
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            )) : (
+                                                <TableRow>
+                                                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                                                        Chưa có dữ liệu đơn hàng
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+
+                        {/* Customers Tab */}
+                        <TabsContent value="customers" className="space-y-4">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Danh sách khách hàng</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>ID</TableHead>
+                                                <TableHead>Tên</TableHead>
+                                                <TableHead>Email</TableHead>
+                                                <TableHead>Số điện thoại</TableHead>
+                                                <TableHead>Trạng thái</TableHead>
+                                                <TableHead>Ngày tạo</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {customers && customers.length > 0 ? customers.map((customer) => (
+                                                <TableRow key={customer.id}>
+                                                    <TableCell>#{customer.id}</TableCell>
+                                                    <TableCell>{customer.name}</TableCell>
+                                                    <TableCell>{customer.email}</TableCell>
+                                                    <TableCell>{customer.phone}</TableCell>
+                                                    <TableCell>
+                                                        <Badge variant={customer.status === 'active' ? 'default' : 'secondary'}>
+                                                            {customer.status === 'active' ? 'Hoạt động' :
+                                                                customer.status === 'inactive' ? 'Không hoạt động' : customer.status}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell>{new Date(customer.createdAt).toLocaleDateString('vi-VN')}</TableCell>
+                                                </TableRow>
+                                            )) : (
+                                                <TableRow>
+                                                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                                                        Chưa có dữ liệu khách hàng
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+
+                        {/* Cleaners Tab */}
+                        <TabsContent value="cleaners" className="space-y-4">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Danh sách nhân viên</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>ID</TableHead>
+                                                <TableHead>Tên</TableHead>
+                                                <TableHead>Email</TableHead>
+                                                <TableHead>Số điện thoại</TableHead>
+                                                <TableHead>Trạng thái</TableHead>
+                                                <TableHead>Kinh nghiệm</TableHead>
+                                                <TableHead>Thao tác</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {cleaners && cleaners.length > 0 ? cleaners.map((cleaner) => (
+                                                <TableRow key={cleaner.id}>
+                                                    <TableCell>#{cleaner.id}</TableCell>
+                                                    <TableCell>{cleaner.name}</TableCell>
+                                                    <TableCell>{cleaner.email}</TableCell>
+                                                    <TableCell>{cleaner.phone}</TableCell>
+                                                    <TableCell>
+                                                        <Badge variant={cleaner.status === 'active' ? 'default' : 'secondary'}>
+                                                            {cleaner.status === 'active' ? 'Hoạt động' :
+                                                                cleaner.status === 'inactive' ? 'Không hoạt động' : cleaner.status}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell>{cleaner.experience || 'N/A'}</TableCell>
+                                                    <TableCell>
+                                                        <Button variant="ghost" size="sm" onClick={() => handleOpenStatusModal(cleaner)}>
+                                                            <Edit className="h-4 w-4" />
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            )) : (
+                                                <TableRow>
+                                                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                                                        Chưa có dữ liệu nhân viên
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+
+                        {/* Bills Tab */}
+                        <TabsContent value="bills" className="space-y-4">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Danh sách hóa đơn</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>ID</TableHead>
+                                                <TableHead>Bill ID</TableHead>
+                                                <TableHead>Email khách hàng</TableHead>
+                                                <TableHead>Số tiền</TableHead>
+                                                <TableHead>Trạng thái</TableHead>
+                                                <TableHead>Ngày thanh toán</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {bills && bills.length > 0 ? bills.map((bill) => (
+                                                <TableRow key={bill.id}>
+                                                    <TableCell>#{bill.id}</TableCell>
+                                                    <TableCell>{bill.billId}</TableCell>
+                                                    <TableCell>{bill.customerEmail}</TableCell>
+                                                    <TableCell>{bill.amount.toLocaleString('vi-VN')} VNĐ</TableCell>
+                                                    <TableCell>
+                                                        <Badge variant={bill.status === 'completed' ? 'default' : 'secondary'}>
+                                                            {bill.status === 'completed' ? 'Đã thanh toán' : 'Chưa thanh toán'}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell>{new Date(bill.date).toLocaleDateString('vi-VN')}</TableCell>
+                                                </TableRow>
+                                            )) : (
+                                                <TableRow>
+                                                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                                                        Chưa có dữ liệu hóa đơn
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                    </Tabs>
+
+                    {/* Cleaner Status Update Modal */}
+                    <Dialog open={isStatusModalOpen} onOpenChange={setIsStatusModalOpen}>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Cập nhật trạng thái nhân viên</DialogTitle>
+                                <DialogDescription>
+                                    Chọn trạng thái mới cho nhân viên &quot;{selectedCleaner?.name}&quot;.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="py-4">
+                                <Select value={newCleanerStatus} onValueChange={setNewCleanerStatus}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Chọn trạng thái" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="active">Hoạt động</SelectItem>
+                                        <SelectItem value="inactive">Không hoạt động</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsStatusModalOpen(false)}>Hủy</Button>
+                                <Button onClick={handleUpdateCleanerStatus} disabled={isUpdatingStatus}>
+                                    {isUpdatingStatus && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Cập nhật
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
+                    {/* Booking Detail Modal */}
+                    <Dialog open={isBookingDetailModalOpen} onOpenChange={setIsBookingDetailModalOpen}>
+                        <DialogContent className="max-w-2xl">
+                            <DialogHeader>
+                                <DialogTitle>Chi tiết đơn hàng #{selectedBooking?.id}</DialogTitle>
+                                <DialogDescription>
+                                    Thông tin chi tiết về đơn hàng.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="py-4">
+                                {isLoadingBookingDetail ? (
+                                    <div className="flex items-center justify-center py-8">
+                                        <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                                        <span>Đang tải chi tiết...</span>
+                                    </div>
+                                ) : selectedBooking ? (
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <h4 className="font-semibold text-sm text-gray-600">Thông tin khách hàng</h4>
+                                                <p className="text-sm">Tên: {selectedBooking.userName}</p>
+                                                <p className="text-sm">Liên hệ: {selectedBooking.contactName}</p>
+                                                <p className="text-sm">SĐT: {selectedBooking.contactPhone}</p>
+                                            </div>
+                                            <div>
+                                                <h4 className="font-semibold text-sm text-gray-600">Thông tin dịch vụ</h4>
+                                                <p className="text-sm">Dịch vụ: {selectedBooking.serviceName}</p>
+                                                <p className="text-sm">Diện tích: {selectedBooking.areaSizeName}</p>
+                                                <p className="text-sm">Thời gian: {selectedBooking.timeSlotRange}</p>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <h4 className="font-semibold text-sm text-gray-600">Địa chỉ</h4>
+                                            <p className="text-sm">{selectedBooking.address}</p>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <h4 className="font-semibold text-sm text-gray-600">Ngày đặt</h4>
+                                                <p className="text-sm">{new Date(selectedBooking.bookingDate).toLocaleDateString('vi-VN')}</p>
+                                            </div>
+                                            <div>
+                                                <h4 className="font-semibold text-sm text-gray-600">Tổng tiền</h4>
+                                                <p className="text-sm font-semibold text-green-600">
+                                                    {selectedBooking.totalPrice.toLocaleString('vi-VN')} VNĐ
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <h4 className="font-semibold text-sm text-gray-600">Trạng thái</h4>
+                                            <Badge className={getStatusColor(selectedBooking.status)}>
+                                                {getStatusText(selectedBooking.status)}
+                                            </Badge>
+                                        </div>
+
+                                        {selectedBooking.cleanerName && (
+                                            <div>
+                                                <h4 className="font-semibold text-sm text-gray-600">Nhân viên phụ trách</h4>
+                                                <p className="text-sm">{selectedBooking.cleanerName}</p>
+                                            </div>
+                                        )}
+
+                                        {selectedBooking.notes && (
+                                            <div>
+                                                <h4 className="font-semibold text-sm text-gray-600">Ghi chú</h4>
+                                                <p className="text-sm">{selectedBooking.notes}</p>
+                                            </div>
+                                        )}
+
+                                        <div>
+                                            <h4 className="font-semibold text-sm text-gray-600">Ngày tạo</h4>
+                                            <p className="text-sm">{new Date(selectedBooking.createdAt).toLocaleString('vi-VN')}</p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="text-center text-gray-500 py-8">Không có thông tin chi tiết</p>
+                                )}
+                            </div>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsBookingDetailModalOpen(false)}>Đóng</Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                </div>
+            </div>
+        </>
+    )
 }
