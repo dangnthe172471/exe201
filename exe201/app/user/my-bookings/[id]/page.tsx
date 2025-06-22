@@ -4,6 +4,9 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
 import {
   Calendar,
   Clock,
@@ -24,6 +27,7 @@ import { useParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { getBookingById } from "@/app/api/services/bookingApi"
+import { reviewApi, CreateReviewRequest } from "@/app/api/services/reviewApi"
 import Header from "@/components/header"
 
 // Interface cho dữ liệu từ API
@@ -102,6 +106,16 @@ export default function BookingDetailPage() {
   const [booking, setBooking] = useState<BookingDetailDto | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [rating, setRating] = useState(5)
+  const [comment, setComment] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [hasReviewed, setHasReviewed] = useState(false)
+  const [review, setReview] = useState<any>(null)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editRating, setEditRating] = useState(5)
+  const [editComment, setEditComment] = useState("")
+  const [isEditSubmitting, setIsEditSubmitting] = useState(false)
 
   useEffect(() => {
     const fetchBookingDetail = async () => {
@@ -119,6 +133,21 @@ export default function BookingDetailPage() {
         const bookingId = parseInt(params.id as string)
         const data = await getBookingById(bookingId, token)
         setBooking(data)
+
+        // Kiểm tra xem user đã đánh giá chưa
+        if (data.status === "completed") {
+          try {
+            const reviewed = await reviewApi.checkUserReviewedBooking(bookingId, token)
+            setHasReviewed(reviewed)
+
+            if (reviewed) {
+              const reviewData = await reviewApi.getReviewByBookingId(bookingId, token)
+              setReview(reviewData)
+            }
+          } catch (error) {
+            console.error("Error checking review:", error)
+          }
+        }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Có lỗi xảy ra'
         setError(errorMessage)
@@ -138,6 +167,77 @@ export default function BookingDetailPage() {
       fetchBookingDetail()
     }
   }, [params.id, router])
+
+  const handleSubmitFeedback = async () => {
+    if (rating < 1 || rating > 5) {
+      toast.error("Vui lòng chọn số sao từ 1-5")
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        toast.error("Bạn cần đăng nhập để sử dụng tính năng này")
+        router.push("/login")
+        return
+      }
+
+      const reviewData: CreateReviewRequest = {
+        bookingId: booking!.id,
+        rating,
+        comment: comment.trim() || undefined,
+      }
+
+      const createdReview = await reviewApi.createReview(reviewData, token)
+      toast.success("Đánh giá của bạn đã được gửi thành công!")
+      setIsDialogOpen(false)
+      setRating(5)
+      setComment("")
+
+      // Cập nhật state sau khi đánh giá thành công
+      setHasReviewed(true)
+      setReview(createdReview)
+    } catch (error: any) {
+      console.error("Error submitting review:", error)
+      const errorMessage = error.message || "Có lỗi xảy ra khi gửi đánh giá"
+      toast.error(errorMessage)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // Khi mở dialog sửa, set lại giá trị cũ
+  const openEditDialog = () => {
+    setEditRating(review.rating)
+    setEditComment(review.comment || "")
+    setIsEditDialogOpen(true)
+  }
+
+  const handleEditFeedback = async () => {
+    if (editRating < 1 || editRating > 5) {
+      toast.error("Vui lòng chọn số sao từ 1-5")
+      return
+    }
+    setIsEditSubmitting(true)
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        toast.error("Bạn cần đăng nhập để sử dụng tính năng này")
+        router.push("/login")
+        return
+      }
+      const updated = await reviewApi.updateReview(booking!.id, { rating: editRating, comment: editComment.trim() || undefined }, token)
+      toast.success("Cập nhật đánh giá thành công!")
+      setReview(updated)
+      setIsEditDialogOpen(false)
+    } catch (error: any) {
+      toast.error(error.message || "Có lỗi khi cập nhật đánh giá")
+    } finally {
+      setIsEditSubmitting(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -192,12 +292,117 @@ export default function BookingDetailPage() {
               </div>
 
               {booking.status === "completed" && (
-                <Button asChild>
-                  <Link href={`/feedback/${booking.id}`}>
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Đánh giá dịch vụ
-                  </Link>
-                </Button>
+                <div className="flex gap-2">
+                  {hasReviewed ? (
+                    <Button variant="outline" disabled>
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Đã đánh giá
+                    </Button>
+                  ) : (
+                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button>
+                          <MessageSquare className="h-4 w-4 mr-2" />
+                          Đánh giá dịch vụ
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[500px]">
+                        <DialogHeader>
+                          <DialogTitle className="flex items-center gap-2">
+                            <MessageSquare className="h-5 w-5 text-blue-500" />
+                            Đánh giá dịch vụ
+                          </DialogTitle>
+                        </DialogHeader>
+
+                        <div className="space-y-6">
+                          {/* Thông tin booking */}
+                          <div className="bg-gray-50 p-4 rounded-lg">
+                            <h3 className="font-medium text-gray-900 mb-2">Thông tin dịch vụ:</h3>
+                            <div className="text-sm text-gray-600 space-y-1">
+                              <p><strong>Dịch vụ:</strong> {booking.serviceName}</p>
+                              <p><strong>Địa chỉ:</strong> {booking.address}</p>
+                              <p><strong>Ngày thực hiện:</strong> {new Date(booking.bookingDate).toLocaleDateString('vi-VN')}</p>
+                              <p><strong>Nhân viên:</strong> {booking.cleanerName || "Chưa có"}</p>
+                            </div>
+                          </div>
+
+                          {/* Rating */}
+                          <div>
+                            <Label className="text-base font-medium text-gray-900 mb-3 block">
+                              Đánh giá của bạn:
+                            </Label>
+                            <div className="flex justify-center space-x-2">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <button
+                                  key={star}
+                                  type="button"
+                                  onClick={() => setRating(star)}
+                                  className="focus:outline-none transition-colors"
+                                >
+                                  <Star
+                                    className={`w-10 h-10 ${star <= rating
+                                      ? "text-yellow-400 fill-current"
+                                      : "text-gray-300 hover:text-yellow-300"
+                                      }`}
+                                  />
+                                </button>
+                              ))}
+                            </div>
+                            <p className="text-center mt-2 text-sm text-gray-600">
+                              {rating === 1 && "Rất không hài lòng"}
+                              {rating === 2 && "Không hài lòng"}
+                              {rating === 3 && "Bình thường"}
+                              {rating === 4 && "Hài lòng"}
+                              {rating === 5 && "Rất hài lòng"}
+                            </p>
+                          </div>
+
+                          {/* Comment */}
+                          <div>
+                            <Label htmlFor="comment" className="text-base font-medium text-gray-900 mb-2 block">
+                              Nhận xét (không bắt buộc):
+                            </Label>
+                            <Textarea
+                              id="comment"
+                              value={comment}
+                              onChange={(e) => setComment(e.target.value)}
+                              placeholder="Chia sẻ trải nghiệm của bạn về dịch vụ..."
+                              className="min-h-[120px] resize-none"
+                              maxLength={500}
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                              {comment.length}/500 ký tự
+                            </p>
+                          </div>
+
+                          {/* Submit button */}
+                          <div className="flex justify-end gap-3">
+                            <Button
+                              variant="outline"
+                              onClick={() => setIsDialogOpen(false)}
+                              disabled={isSubmitting}
+                            >
+                              Hủy
+                            </Button>
+                            <Button
+                              onClick={handleSubmitFeedback}
+                              disabled={isSubmitting}
+                            >
+                              {isSubmitting ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                  Đang gửi...
+                                </>
+                              ) : (
+                                "Gửi đánh giá"
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -394,7 +599,7 @@ export default function BookingDetailPage() {
                         <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
                         <div>
                           <div className="font-medium">Đang thực hiện</div>
-                          <div className="text-gray-600">Nhân viên đang làm việc</div>
+                          <div className="text-gray-600">Nhân viên đang thực hiện dịch vụ</div>
                         </div>
                       </div>
                     )}
@@ -421,6 +626,127 @@ export default function BookingDetailPage() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Feedback Section - Chỉ hiển thị khi đã đánh giá */}
+              {hasReviewed && review && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Star className="h-5 w-5 text-yellow-500" />
+                      Đánh giá của bạn
+                      <Button size="sm" variant="outline" className="ml-auto" onClick={openEditDialog}>
+                        Sửa đánh giá
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-5 h-5 ${i < review.rating ? "text-yellow-400 fill-current" : "text-gray-300"}`}
+                          />
+                        ))}
+                        <span className="ml-2 text-sm text-gray-600">
+                          {review.rating}/5 sao
+                        </span>
+                      </div>
+                      {review.comment && (
+                        <div>
+                          <p className="text-sm text-gray-700 italic">
+                            "{review.comment}"
+                          </p>
+                        </div>
+                      )}
+                      <div className="text-xs text-gray-500">
+                        Đánh giá vào: {new Date(review.createdAt).toLocaleDateString('vi-VN')}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Dialog sửa đánh giá */}
+              <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                <DialogContent className="sm:max-w-[500px]">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Star className="h-5 w-5 text-yellow-500" />
+                      Sửa đánh giá
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-6">
+                    {/* Rating */}
+                    <div>
+                      <Label className="text-base font-medium text-gray-900 mb-3 block">
+                        Đánh giá của bạn:
+                      </Label>
+                      <div className="flex justify-center space-x-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setEditRating(star)}
+                            className="focus:outline-none transition-colors"
+                          >
+                            <Star
+                              className={`w-10 h-10 ${star <= editRating ? "text-yellow-400 fill-current" : "text-gray-300 hover:text-yellow-300"}`}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-center mt-2 text-sm text-gray-600">
+                        {editRating === 1 && "Rất không hài lòng"}
+                        {editRating === 2 && "Không hài lòng"}
+                        {editRating === 3 && "Bình thường"}
+                        {editRating === 4 && "Hài lòng"}
+                        {editRating === 5 && "Rất hài lòng"}
+                      </p>
+                    </div>
+                    {/* Comment */}
+                    <div>
+                      <Label htmlFor="edit-comment" className="text-base font-medium text-gray-900 mb-2 block">
+                        Nhận xét (không bắt buộc):
+                      </Label>
+                      <Textarea
+                        id="edit-comment"
+                        value={editComment}
+                        onChange={(e) => setEditComment(e.target.value)}
+                        placeholder="Chia sẻ trải nghiệm của bạn về dịch vụ..."
+                        className="min-h-[120px] resize-none"
+                        maxLength={500}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        {editComment.length}/500 ký tự
+                      </p>
+                    </div>
+                    {/* Submit button */}
+                    <div className="flex justify-end gap-3">
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsEditDialogOpen(false)}
+                        disabled={isEditSubmitting}
+                      >
+                        Hủy
+                      </Button>
+                      <Button
+                        onClick={handleEditFeedback}
+                        disabled={isEditSubmitting}
+                      >
+                        {isEditSubmitting ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            Đang lưu...
+                          </>
+                        ) : (
+                          "Lưu thay đổi"
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </div>
