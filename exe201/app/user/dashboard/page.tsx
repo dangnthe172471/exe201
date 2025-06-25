@@ -180,7 +180,7 @@ export default function UserDashboard() {
                     <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-600">
                       <div>
                         <p><Calendar className="inline w-4 h-4 mr-2" />
-                          {b.date ? format(new Date(b.date), "PPP", { locale: vi }) : "Không rõ ngày"}</p>
+                          {b.bookingDate ? format(new Date(b.bookingDate), "PPP", { locale: vi }) : "Không rõ ngày"}</p>
                         <p><Clock className="inline w-4 h-4 mr-2" />{b.timeSlotRange}</p>
                         <p><MapPin className="inline w-4 h-4 mr-2" />{b.address}</p>
                       </div>
