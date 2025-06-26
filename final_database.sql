@@ -127,9 +127,9 @@ CREATE TABLE NewsCategories (
 -- Bảng NewsArticles (Bài viết tin tức)
 CREATE TABLE NewsArticles (
   Id INT IDENTITY(1,1) PRIMARY KEY,
-  Title NVARCHAR(255) NOT NULL,
+  Title NVARCHAR(MAX) NOT NULL,
   Slug NVARCHAR(255) NOT NULL UNIQUE,
-  Excerpt NVARCHAR(500),
+  Excerpt NVARCHAR(MAX),
   Content NVARCHAR(MAX),
   CategoryId INT NOT NULL,
   AuthorId INT NOT NULL,
@@ -139,7 +139,7 @@ CREATE TABLE NewsArticles (
   Likes INT DEFAULT 0,
   Comments INT DEFAULT 0,
   IsFeatured BIT DEFAULT 0,
-  ImageUrl NVARCHAR(255),
+  ImageUrl NVARCHAR(MAX),
   IsActive BIT DEFAULT 1,
   CreatedAt DATETIME2 DEFAULT GETDATE(),
   UpdatedAt DATETIME2 DEFAULT GETDATE(),
