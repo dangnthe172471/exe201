@@ -187,11 +187,43 @@ INSERT INTO TimeSlots (TimeRange) VALUES
 (N'14:00 - 16:00'),
 (N'16:00 - 18:00');
 
--- Demo Users
+
+-- 21 Users (role: user)
+INSERT INTO Users (Name, Email, Password, Phone, Address, Role, Status)
+VALUES
+(N'Nguyễn Đức Tâm', 'nguyenductammdsl@gmail.com', '123456', '0900000001', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Nam Khánh', 'namkhanhdz123@gmail.com', '123456', '0900000002', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Quý', 'quy77889@gmail.com', '123456', '0900000003', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Nguyễn Quang Vinh', 'nguyenquangvinhzz@gmail.com', '123456', '0900000004', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Huỳnh Thái Khang', 'huynhthaikhang@gmail.com', '123456', '0900000005', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Đạt', 'dat8948@gmail.com', '123456', '0900000006', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Thanh D', 'thanhd2006@gmail.com', '123456', '0900000007', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Hinh Võ', 'hinhvomkmv1987az@gmail.com', '123456', '0900000008', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'King PvP', 'kingpvpfa2006@gmail.com', '123456', '0900000009', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Võ Nhật Duy', 'vonhatduy07082k6@gmail.com', '123456', '0900000010', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Tiến Nhiên', 'tiennhien2k6@gmail.com', '123456', '0900000011', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Ngô Khang', 'ngkhang2002zz@gmail.com', '123456', '0900000012', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Văn Linh', 'vanlinh2k666@gmail.com', '123456', '0900000013', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Ngô Thảo Nguyên', 'ngthaonguyen77@gmail.com', '123456', '0900000014', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Văn Ách', 'vnaxkonchiem111@gmail.com', '123456', '0900000015', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Thắng Nghiêm', 'thangnghiem1964@gmail.com', '123456', '0900000016', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Văn Zlinh', 'vanzlinh@gmail.com', '123456', '0900000017', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Holy Alone', 'holyalone123@gmail.com', '123456', '0900000018', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Tân Đạt', 'tandat193@gmail.com', '123456', '0900000019', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Nguyễn Hoàng Anh', 'nguyenhoanganh2n7@gmail.com', '123456', '0900000020', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Nguyễn Trang', 'ntmtrang129@gmail.com', '123456', '0900000021', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active');
+
+-- 4 Cleaners
+INSERT INTO Users (Name, Email, Password, Phone, Address, Role, Status)
+VALUES
+(N'Trần Trang', 'ntmtrang123@gmail.com', '123456', '0910000001', N'Thạch Hòa, Thạch Thất, Hà Nội', 'cleaner', 'active'),
+(N'Lê Tường Vy', 'letuongvy1806@gmail.com', '123456', '0910000002', N'Thạch Hòa, Thạch Thất, Hà Nội', 'cleaner', 'active'),
+(N'Nguyễn Hoàng Anh', 'nguyenhoanganh2n6@gmail.com', '123456', '0910000003', N'Thạch Hòa, Thạch Thất, Hà Nội', 'cleaner', 'active'),
+(N'Nguyễn Thu Trang', 'ntmtrang126@gmail.com', '123456', '0910000004', N'Thạch Hòa, Thạch Thất, Hà Nội', 'cleaner', 'active');
+
+-- Admin
 INSERT INTO Users (Name, Email, Password, Phone, Address, Role, Status) VALUES
-(N'Nguyễn Văn A', 'user@demo.com', '123456', '0123456789', N'123 Nguyễn Văn Linh, Q.7, TP.HCM', 'user', 'active'),
-(N'Trần Thị B', 'cleaner@demo.com', '123456', '0987654321', N'456 Lê Văn Việt, Q.9, TP.HCM', 'cleaner', 'active'),
-(N'Admin', 'admin@demo.com', '123456', '0111222333', N'789 Nguyễn Thị Minh Khai, Q.1, TP.HCM', 'admin', 'active');
+(N'Admin', 'admin@gmail.com', '123456', '0111222333', N'789 Nguyễn Thị Minh Khai, Q.1, TP.HCM', 'admin', 'active');
 
 -- NewsCategories
 INSERT INTO NewsCategories (Name, Slug, ColorClass) VALUES
@@ -249,41 +281,6 @@ INSERT INTO NewsArticleTags (ArticleId, TagId) VALUES
 (3, 6), -- Bài 3 với tag công nghệ
 (4, 6), (4, 1), -- Bài 4 với tags công nghệ, dọn dẹp
 (5, 3), (5, 1); -- Bài 5 với tags tiết kiệm thời gian, dọn dẹp
-
-
-
--- 21 Users (role: user)
-INSERT INTO Users (Name, Email, Password, Phone, Address, Role, Status)
-VALUES
-(N'Nguyễn Đức Tâm', 'nguyenductammdsl@gmail.com', '123456', '0900000001', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
-(N'Nam Khánh', 'namkhanhdz123@gmail.com', '123456', '0900000002', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
-(N'Quý', 'quy77889@gmail.com', '123456', '0900000003', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
-(N'Nguyễn Quang Vinh', 'nguyenquangvinhzz@gmail.com', '123456', '0900000004', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
-(N'Huỳnh Thái Khang', 'huynhthaikhang@gmail.com', '123456', '0900000005', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
-(N'Đạt', 'dat8948@gmail.com', '123456', '0900000006', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
-(N'Thanh D', 'thanhd2006@gmail.com', '123456', '0900000007', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
-(N'Hinh Võ', 'hinhvomkmv1987az@gmail.com', '123456', '0900000008', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
-(N'King PvP', 'kingpvpfa2006@gmail.com', '123456', '0900000009', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
-(N'Võ Nhật Duy', 'vonhatduy07082k6@gmail.com', '123456', '0900000010', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
-(N'Tiến Nhiên', 'tiennhien2k6@gmail.com', '123456', '0900000011', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
-(N'Ngô Khang', 'ngkhang2002zz@gmail.com', '123456', '0900000012', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
-(N'Văn Linh', 'vanlinh2k666@gmail.com', '123456', '0900000013', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
-(N'Ngô Thảo Nguyên', 'ngthaonguyen77@gmail.com', '123456', '0900000014', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
-(N'Văn Ách', 'vnaxkonchiem111@gmail.com', '123456', '0900000015', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
-(N'Thắng Nghiêm', 'thangnghiem1964@gmail.com', '123456', '0900000016', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
-(N'Văn Zlinh', 'vanzlinh@gmail.com', '123456', '0900000017', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
-(N'Holy Alone', 'holyalone123@gmail.com', '123456', '0900000018', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
-(N'Tân Đạt', 'tandat193@gmail.com', '123456', '0900000019', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
-(N'Nguyễn Hoàng Anh', 'nguyenhoanganh2n7@gmail.com', '123456', '0900000020', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
-(N'Nguyễn Trang', 'ntmtrang129@gmail.com', '123456', '0900000021', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active');
-
--- 4 Cleaners
-INSERT INTO Users (Name, Email, Password, Phone, Address, Role, Status)
-VALUES
-(N'Trần Trang', 'ntmtrang123@gmail.com', '123456', '0910000001', N'Thạch Hòa, Thạch Thất, Hà Nội', 'cleaner', 'active'),
-(N'Lê Tường Vy', 'letuongvy1806@gmail.com', '123456', '0910000002', N'Thạch Hòa, Thạch Thất, Hà Nội', 'cleaner', 'active'),
-(N'Nguyễn Hoàng Anh', 'nguyenhoanganh2n6@gmail.com', '123456', '0910000003', N'Thạch Hòa, Thạch Thất, Hà Nội', 'cleaner', 'active'),
-(N'Nguyễn Thu Trang', 'ntmtrang126@gmail.com', '123456', '0910000004', N'Thạch Hòa, Thạch Thất, Hà Nội', 'cleaner', 'active');
 
 -- Bookings
 INSERT INTO Bookings (UserId, ServiceId, AreaSizeId, TimeSlotId, CleanerId, BookingDate, Address, ContactName, ContactPhone, Notes, TotalPrice, Status)
