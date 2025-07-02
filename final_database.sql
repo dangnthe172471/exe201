@@ -169,17 +169,16 @@ CREATE TABLE NewsArticleTags (
 
 -- Services
 INSERT INTO Services (Name, Description, BasePrice, Duration, Icon) VALUES
-(N'Dọn Nhà Định Kỳ', N'Dịch vụ dọn dẹp nhà cửa hàng tuần, hàng tháng với đội ngũ chuyên nghiệp', 300000, N'2-4 giờ', N'🏠'),
-(N'Dọn Văn Phòng', N'Vệ sinh văn phòng chuyên nghiệp, tạo môi trường làm việc sạch sẽ', 500000, N'3-5 giờ', N'🏢'),
-(N'Dọn Sau Xây Dựng', N'Dọn dẹp chuyên sâu sau khi sửa chữa, xây dựng hoặc cải tạo', 800000, N'4-8 giờ', N'🔨'),
-(N'Dọn Cuối Năm', N'Dọn dẹp tổng thể, chuẩn bị đón Tết Nguyên Đán trọn vẹn', 600000, N'4-6 giờ', N'🎊');
+(N'Dọn Nhà Định Kỳ', N'Dịch vụ dọn dẹp nhà cửa định kỳ với đội ngũ chuyên nghiệp', 80000, N'2-4 giờ', N'🏠'),
+(N'Dọn Nhà Và Chuyển Phòng', N'Dọn dẹp nhà cửa, hỗ trợ chuyển phòng, sắp xếp đồ đạc', 120000, N'3-5 giờ', N'🚚'),
+(N'Dọn Phòng Sau Xây Dựng', N'Dọn dẹp chuyên sâu sau khi sửa chữa, xây dựng hoặc cải tạo', 150000, N'4-8 giờ', N'🔨');
 
 -- AreaSizes
 INSERT INTO AreaSizes (Name, Multiplier) VALUES
-(N'Nhỏ (< 50m²)', 1.0),
-(N'Trung bình (50-100m²)', 1.5),
-(N'Lớn (100-200m²)', 2.0),
-(N'Rất lớn (> 200m²)', 2.5);
+(N'Nhỏ (< 25m²)', 1.5),
+(N'Trung bình (25-50m²)', 2.0),
+(N'Lớn (50-100m²)', 3.0),
+(N'Rất lớn (> 100m²)', 5.0);
 
 -- TimeSlots
 INSERT INTO TimeSlots (TimeRange) VALUES
@@ -250,6 +249,66 @@ INSERT INTO NewsArticleTags (ArticleId, TagId) VALUES
 (3, 6), -- Bài 3 với tag công nghệ
 (4, 6), (4, 1), -- Bài 4 với tags công nghệ, dọn dẹp
 (5, 3), (5, 1); -- Bài 5 với tags tiết kiệm thời gian, dọn dẹp
+
+
+
+-- 21 Users (role: user)
+INSERT INTO Users (Name, Email, Password, Phone, Address, Role, Status)
+VALUES
+(N'Nguyễn Đức Tâm', 'nguyenductammdsl@gmail.com', '123456', '0900000001', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Nam Khánh', 'namkhanhdz123@gmail.com', '123456', '0900000002', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Quý', 'quy77889@gmail.com', '123456', '0900000003', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Nguyễn Quang Vinh', 'nguyenquangvinhzz@gmail.com', '123456', '0900000004', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Huỳnh Thái Khang', 'huynhthaikhang@gmail.com', '123456', '0900000005', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Đạt', 'dat8948@gmail.com', '123456', '0900000006', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Thanh D', 'thanhd2006@gmail.com', '123456', '0900000007', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Hinh Võ', 'hinhvomkmv1987az@gmail.com', '123456', '0900000008', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'King PvP', 'kingpvpfa2006@gmail.com', '123456', '0900000009', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Võ Nhật Duy', 'vonhatduy07082k6@gmail.com', '123456', '0900000010', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Tiến Nhiên', 'tiennhien2k6@gmail.com', '123456', '0900000011', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Ngô Khang', 'ngkhang2002zz@gmail.com', '123456', '0900000012', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Văn Linh', 'vanlinh2k666@gmail.com', '123456', '0900000013', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Ngô Thảo Nguyên', 'ngthaonguyen77@gmail.com', '123456', '0900000014', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Văn Ách', 'vnaxkonchiem111@gmail.com', '123456', '0900000015', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Thắng Nghiêm', 'thangnghiem1964@gmail.com', '123456', '0900000016', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Văn Zlinh', 'vanzlinh@gmail.com', '123456', '0900000017', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Holy Alone', 'holyalone123@gmail.com', '123456', '0900000018', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Tân Đạt', 'tandat193@gmail.com', '123456', '0900000019', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Nguyễn Hoàng Anh', 'nguyenhoanganh2n7@gmail.com', '123456', '0900000020', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active'),
+(N'Nguyễn Trang', 'ntmtrang129@gmail.com', '123456', '0900000021', N'Thạch Hòa, Thạch Thất, Hà Nội', 'user', 'active');
+
+-- 4 Cleaners
+INSERT INTO Users (Name, Email, Password, Phone, Address, Role, Status)
+VALUES
+(N'Trần Trang', 'ntmtrang123@gmail.com', '123456', '0910000001', N'Thạch Hòa, Thạch Thất, Hà Nội', 'cleaner', 'active'),
+(N'Lê Tường Vy', 'letuongvy1806@gmail.com', '123456', '0910000002', N'Thạch Hòa, Thạch Thất, Hà Nội', 'cleaner', 'active'),
+(N'Nguyễn Hoàng Anh', 'nguyenhoanganh2n6@gmail.com', '123456', '0910000003', N'Thạch Hòa, Thạch Thất, Hà Nội', 'cleaner', 'active'),
+(N'Nguyễn Thu Trang', 'ntmtrang126@gmail.com', '123456', '0910000004', N'Thạch Hòa, Thạch Thất, Hà Nội', 'cleaner', 'active');
+
+-- Bookings
+INSERT INTO Bookings (UserId, ServiceId, AreaSizeId, TimeSlotId, CleanerId, BookingDate, Address, ContactName, ContactPhone, Notes, TotalPrice, Status)
+VALUES
+(1, 1, 1, 1, 4, '2025-05-29', N'Thạch Hòa, Thạch Thất, Hà Nội', N'Nguyễn Đức Tâm', '0900000001', NULL, 119000, 'completed'),
+(2, 1, 1, 1, 4, '2025-05-30', N'Thạch Hòa, Thạch Thất, Hà Nội', N'Nam Khánh', '0900000002', NULL, 119000, 'completed'),
+(3, 1, 2, 1, 2, '2025-05-31', N'Thạch Hòa, Thạch Thất, Hà Nội', N'Quý', '0900000003', NULL, 149000, 'completed'),
+(4, 1, 1, 1, 2, '2025-06-01', N'Thạch Hòa, Thạch Thất, Hà Nội', N'Nguyễn Quang Vinh', '0900000004', NULL, 119000, 'completed'),
+(5, 1, 1, 1, 2, '2025-06-02', N'Thạch Hòa, Thạch Thất, Hà Nội', N'Huỳnh Thái Khang', '0900000005', NULL, 119000, 'completed'),
+(6, 1, 1, 1, 2, '2025-06-03', N'Thạch Hòa, Thạch Thất, Hà Nội', N'Đạt', '0900000006', NULL, 119000, 'completed'),
+(7, 1, 2, 1, 4, '2025-06-07', N'Thạch Hòa, Thạch Thất, Hà Nội', N'Thanh D', '0900000007', NULL, 149000, 'completed'),
+(8, 1, 2, 1, 4, '2025-06-07', N'Thạch Hòa, Thạch Thất, Hà Nội', N'Hinh Võ', '0900000008', NULL, 149000, 'completed'),
+(9, 1, 1, 1, 4, '2025-06-07', N'Thạch Hòa, Thạch Thất, Hà Nội', N'King PvP', '0900000009', NULL, 119000, 'completed'),
+(10, 1, 2, 1, 2, '2025-06-08', N'Thạch Hòa, Thạch Thất, Hà Nội', N'Võ Nhật Duy', '0900000010', NULL, 149000, 'completed'),
+(11, 1, 2, 1, 2, '2025-06-08', N'Thạch Hòa, Thạch Thất, Hà Nội', N'Tiến Nhiên', '0900000011', NULL, 149000, 'completed'),
+(12, 1, 1, 1, 4, '2025-06-09', N'Thạch Hòa, Thạch Thất, Hà Nội', N'Ngô Khang', '0900000012', NULL, 119000, 'completed'),
+(13, 1, 2, 1, 2, '2025-06-10', N'Thạch Hòa, Thạch Thất, Hà Nội', N'Văn Linh', '0900000013', NULL, 149000, 'completed'),
+(14, 1, 1, 1, 4, '2025-06-11', N'Thạch Hòa, Thạch Thất, Hà Nội', N'Ngô Thảo Nguyên', '0900000014', NULL, 119000, 'completed'),
+(15, 1, 2, 1, 2, '2025-06-14', N'Thạch Hòa, Thạch Thất, Hà Nội', N'Văn Ách', '0900000015', NULL, 149000, 'completed'),
+(16, 1, 2, 1, 3, '2025-06-14', N'Thạch Hòa, Thạch Thất, Hà Nội', N'Thắng Nghiêm', '0900000016', NULL, 149000, 'completed'),
+(17, 1, 2, 1, 2, '2025-06-14', N'Thạch Hòa, Thạch Thất, Hà Nội', N'Văn Zlinh', '0900000017', NULL, 149000, 'completed'),
+(18, 1, 1, 1, 2, '2025-06-15', N'Thạch Hòa, Thạch Thất, Hà Nội', N'Holy Alone', '0900000018', NULL, 119000, 'completed'),
+(19, 1, 4, 1, 3, '2025-06-15', N'Thạch Hòa, Thạch Thất, Hà Nội', N'Tân Đạt', '0900000019', NULL, 278000, 'completed'),
+(20, 1, 2, 1, 3, '2025-06-15', N'Thạch Hòa, Thạch Thất, Hà Nội', N'Võ Vĩnh Phúc', '0900000020', NULL, 149000, 'completed'),
+(21, 1, 2, 1, 2, '2025-06-18', N'Thạch Hòa, Thạch Thất, Hà Nội', N'Nhật Khiêm', '0900000021', NULL, 149000, 'completed');
 
 -- Indexes để tối ưu performance
 CREATE INDEX IX_Bookings_UserId ON Bookings(UserId);
