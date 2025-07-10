@@ -29,6 +29,7 @@ import { toast } from "sonner"
 import { getBookingById } from "@/app/api/services/bookingApi"
 import { reviewApi, CreateReviewRequest } from "@/app/api/services/reviewApi"
 import Header from "@/components/header"
+import { formatPhoneNumber } from "@/lib/utils"
 
 // Interface cho dữ liệu từ API
 interface BookingDetailDto {
@@ -495,7 +496,7 @@ export default function BookingDetailPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Phone className="h-4 w-4 text-green-600" />
-                          <span>{booking.contactPhone}</span>
+                          <span>{formatPhoneNumber(booking.contactPhone)}</span>
                         </div>
                       </div>
                     </div>

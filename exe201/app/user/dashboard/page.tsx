@@ -30,6 +30,7 @@ import {
 } from "@/app/api/services/bookingApi"
 import { changePassword } from "@/app/api/services/authApi"
 import Swal from "sweetalert2"
+import { formatPhoneNumber } from "@/lib/utils"
 
 export default function UserDashboard() {
   const router = useRouter()
@@ -187,7 +188,7 @@ export default function UserDashboard() {
                       <div>
                         <p><DollarSign className="inline w-4 h-4 mr-2" />{b.totalPrice.toLocaleString("vi-VN")}đ</p>
                         <p><User className="inline w-4 h-4 mr-2" />{b.contactName}</p>
-                        <p><Phone className="inline w-4 h-4 mr-2" />{b.contactPhone}</p>
+                        <p><Phone className="inline w-4 h-4 mr-2" />{formatPhoneNumber(b.contactPhone)}</p>
                       </div>
                     </div>
                     {b.notes && <div className="mt-2 text-sm bg-gray-50 p-3 rounded">Ghi chú: {b.notes}</div>}
@@ -208,7 +209,7 @@ export default function UserDashboard() {
               <CardContent className="grid md:grid-cols-2 gap-4 text-lg">
                 <InfoItem label="Họ và tên" value={user.name} />
                 <InfoItem label="Email" value={user.email} />
-                <InfoItem label="Số điện thoại" value={user.phone} />
+                <InfoItem label="Số điện thoại" value={formatPhoneNumber(user.phone)} />
                 <InfoItem label="Địa chỉ" value={user.address} />
               </CardContent>
             </Card>

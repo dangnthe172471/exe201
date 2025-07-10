@@ -19,11 +19,12 @@ export interface ReviewResponse {
 export const reviewApi = {
     // Tạo đánh giá mới
     createReview: async (data: CreateReviewRequest, token: string): Promise<ReviewResponse> => {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/review`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/review`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
+                "ngrok-skip-browser-warning": "true",
             },
             body: JSON.stringify(data),
         });
@@ -42,10 +43,11 @@ export const reviewApi = {
 
     // Kiểm tra user đã đánh giá booking chưa
     checkUserReviewedBooking: async (bookingId: number, token: string): Promise<boolean> => {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/review/check/${bookingId}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/review/check/${bookingId}`, {
             method: "GET",
             headers: {
                 Authorization: `Bearer ${token}`,
+                "ngrok-skip-browser-warning": "true",
             },
         });
 
@@ -64,10 +66,11 @@ export const reviewApi = {
     // Lấy đánh giá theo booking ID
     getReviewByBookingId: async (bookingId: number, token: string): Promise<ReviewResponse | null> => {
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/review/booking/${bookingId}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/review/booking/${bookingId}`, {
                 method: "GET",
                 headers: {
                     Authorization: `Bearer ${token}`,
+                    "ngrok-skip-browser-warning": "true",
                 },
             });
 
@@ -95,11 +98,12 @@ export const reviewApi = {
 
     // Sửa đánh giá
     updateReview: async (bookingId: number, data: { rating: number; comment?: string }, token: string): Promise<ReviewResponse> => {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/review/${bookingId}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/review/${bookingId}`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
+                "ngrok-skip-browser-warning": "true",
             },
             body: JSON.stringify(data),
         });

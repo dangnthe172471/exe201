@@ -20,6 +20,7 @@ import {
   acceptCleanerJob,
   updateCleanerJobStatus,
 } from "@/app/api/services/cleanerApi"
+import { formatPhoneNumber } from "@/lib/utils"
 
 
 export default function CleanerDashboard() {
@@ -254,7 +255,7 @@ export default function CleanerDashboard() {
                             </div>
                             <div className="flex items-center text-sm text-gray-600">
                               <Phone className="w-4 h-4 mr-2" />
-                              {job.contactPhone}
+                              {formatPhoneNumber(job.contactPhone)}
                             </div>
                           </div>
                         </div>
@@ -327,7 +328,7 @@ export default function CleanerDashboard() {
                             </div>
                             <div className="flex items-center text-sm text-gray-600">
                               <Phone className="w-4 h-4 mr-2" />
-                              {job.contactPhone}
+                              {formatPhoneNumber(job.contactPhone)}
                             </div>
                           </div>
                         </div>
@@ -382,7 +383,7 @@ export default function CleanerDashboard() {
                     </div>
                     <div>
                       <Label className="text-sm font-medium text-gray-600">Số điện thoại</Label>
-                      <p className="text-lg">{user.phone}</p>
+                      <p className="text-lg">{formatPhoneNumber(user.phone)}</p>
                     </div>
                     <div>
                       <Label className="text-sm font-medium text-gray-600">Kinh nghiệm</Label>

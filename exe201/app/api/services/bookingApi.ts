@@ -11,11 +11,12 @@ export type CreateBookingRequestDto = {
 }
 
 export async function createBooking(data: CreateBookingRequestDto, token: string) {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/bookings`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bookings`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
         },
         body: JSON.stringify(data),
     })
@@ -36,10 +37,11 @@ export async function createBooking(data: CreateBookingRequestDto, token: string
 
 // Hàm gọi API lấy danh sách booking của user
 export async function getUserBookings(token: string, status: string = "all") {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/bookings?status=${status}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bookings?status=${status}`, {
         method: "GET",
         headers: {
             Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
         },
     })
 
@@ -57,10 +59,11 @@ export async function getUserBookings(token: string, status: string = "all") {
 
 // Hàm gọi API lấy thống kê dashboard
 export async function getDashboardStats(token: string) {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/bookings/dashboard-stats`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bookings/dashboard-stats`, {
         method: "GET",
         headers: {
             Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
         },
     })
 
@@ -78,10 +81,11 @@ export async function getDashboardStats(token: string) {
 // Hàm gọi API lấy chi tiết booking theo ID
 export async function getBookingById(id: number, token: string) {
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/bookings/${id}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/bookings/${id}`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
             'Content-Type': 'application/json',
         },
     });

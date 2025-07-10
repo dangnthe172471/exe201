@@ -14,10 +14,11 @@ export interface LoginResponse {
 
 
 export async function login(request: LoginRequestDto): Promise<LoginResponse> {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Auth/login`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/Auth/login`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "true",
         },
         body: JSON.stringify(request),
     })
@@ -38,10 +39,11 @@ export interface RegisterRequestDto {
 }
 
 export async function register(request: RegisterRequestDto): Promise<any> {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Auth/register`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/Auth/register`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "true",
         },
         body: JSON.stringify(request),
     })
@@ -58,11 +60,12 @@ export const changePassword = async (
     request: { email: string; oldPassword: string; newPassword: string },
     token: string
 ) => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Auth/change-password`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/Auth/change-password`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
         },
         body: JSON.stringify(request),
     })

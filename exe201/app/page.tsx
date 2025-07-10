@@ -3,67 +3,114 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Sparkles, Clock, Shield, Star, ArrowRight, Heart, Users } from "lucide-react"
+import { Sparkles, Clock, Shield, Star, ArrowRight, Heart, Users, Loader2 } from "lucide-react"
 import Link from "next/link"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
+import { useEffect, useState } from "react"
+import { getServices } from "@/app/api/services/ReferenceData"
+
+interface Service {
+  id: number
+  name: string
+  description: string
+  basePrice: number
+  pricePerSquareMeter: number
+  isActive: boolean
+}
 
 export default function HomePage() {
-  const services = [
+  const [services, setServices] = useState<Service[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        // Fetch services
+        const servicesData = await getServices("")
+        setServices(servicesData)
+
+      } catch (err) {
+        console.error('Error fetching data:', err)
+        setError('Có lỗi xảy ra khi tải dữ liệu')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  // Fallback services data if API fails
+  const fallbackServices = [
     {
-      title: "Dọn Nhà Định Kỳ",
+      id: 1,
+      name: "Dọn Nhà Định Kỳ",
       description: "Dịch vụ dọn dẹp nhà cửa hàng tuần, hàng tháng với đội ngũ chuyên nghiệp",
-      price: "300.000đ - 800.000đ",
-      duration: "2-4 giờ",
-      icon: "🏠",
-      gradient: "from-blue-500 to-cyan-400",
+      basePrice: 300000,
+      pricePerSquareMeter: 5000,
+      isActive: true,
     },
     {
-      title: "Dọn Văn Phòng",
+      id: 2,
+      name: "Dọn Văn Phòng",
       description: "Vệ sinh văn phòng chuyên nghiệp, tạo môi trường làm việc sạch sẽ",
-      price: "500.000đ - 1.200.000đ",
-      duration: "3-5 giờ",
-      icon: "🏢",
-      gradient: "from-purple-500 to-pink-400",
+      basePrice: 500000,
+      pricePerSquareMeter: 8000,
+      isActive: true,
     },
     {
-      title: "Dọn Sau Xây Dựng",
+      id: 3,
+      name: "Dọn Sau Xây Dựng",
       description: "Dọn dẹp chuyên sâu sau khi sửa chữa, xây dựng hoặc cải tạo",
-      price: "800.000đ - 2.000.000đ",
-      duration: "4-8 giờ",
-      icon: "🔨",
-      gradient: "from-orange-500 to-red-400",
+      basePrice: 800000,
+      pricePerSquareMeter: 12000,
+      isActive: true,
     },
     {
-      title: "Dọn Cuối Năm",
+      id: 4,
+      name: "Dọn Cuối Năm",
       description: "Dọn dẹp tổng thể, chuẩn bị đón Tết Nguyên Đán trọn vẹn",
-      price: "600.000đ - 1.500.000đ",
-      duration: "4-6 giờ",
-      icon: "🎊",
-      gradient: "from-green-500 to-emerald-400",
+      basePrice: 600000,
+      pricePerSquareMeter: 10000,
+      isActive: true,
     },
+  ]
+
+  const displayServices = services.length > 0 ? services : fallbackServices
+
+  const serviceIcons = ["🏠", "🏢", "🔨", "🎊", "🧹", "✨"]
+  const serviceGradients = [
+    "from-blue-500 to-cyan-400",
+    "from-purple-500 to-pink-400",
+    "from-orange-500 to-red-400",
+    "from-green-500 to-emerald-400",
+    "from-indigo-500 to-purple-400",
+    "from-pink-500 to-rose-400"
   ]
 
   const testimonials = [
     {
       name: "Chị Lan Anh",
-      location: "Quận 1, TP.HCM",
+      location: "Thôn 1, Thạch Hòa, Thạch Thất, Hà Nội",
       rating: 5,
       comment: "Dịch vụ tuyệt vời! Nhân viên làm việc rất cẩn thận và chuyên nghiệp. Nhà tôi sạch sẽ như mới.",
       avatar: "👩‍💼",
     },
     {
       name: "Anh Minh Tuấn",
-      location: "Cầu Giấy, Hà Nội",
+      location: "Thôn 3, Thạch Hòa, Thạch Thất, Hà Nội",
       rating: 5,
-      comment: "Đặt lịch dễ dàng, nhân viên đến đúng giờ. Giá cả hợp lý, chất lượng vượt mong đợi!",
+      comment: "Đặt lịch dễ dàng, nhân viên đến đúng giờ. Giá cả hợp lý, chất lượng vượt mong đợi! Rất hài lòng!",
       avatar: "👨‍💻",
     },
     {
       name: "Chị Thu Hương",
-      location: "Quận 7, TP.HCM",
+      location: "Thôn 4, Thạch Hòa, Thạch Thất, Hà Nội",
       rating: 5,
-      comment: "Đã sử dụng dịch vụ nhiều lần, luôn hài lòng. Đội ngũ rất tận tâm và chu đáo.",
+      comment: "Đã sử dụng dịch vụ nhiều lần, luôn hài lòng. Đội ngũ rất tận tâm và chu đáo. Sẽ còn tiếp tục sử dụng dịch vụ.",
       avatar: "👩‍🏫",
     },
   ]
@@ -98,6 +145,24 @@ export default function HomePage() {
       bgColor: "bg-pink-100",
     },
   ]
+
+  const formatPrice = (basePrice: number) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(basePrice)
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600">Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
@@ -223,35 +288,33 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {services.map((service, index) => (
-              <Card key={index} className="hover:shadow-xl transition-all duration-300 border-0 overflow-hidden group">
-                <div className={`h-2 bg-gradient-to-r ${service.gradient}`}></div>
-                <CardContent className="p-8">
-                  <div className="text-5xl mb-6 group-hover:scale-110 transition-transform duration-300">
-                    {service.icon}
-                  </div>
-                  <h3 className="text-xl font-semibold mb-3">{service.title}</h3>
-                  <p className="text-gray-600 mb-6 leading-relaxed">{service.description}</p>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-500">Giá từ:</span>
-                      <span className="font-semibold text-blue-600">{service.price}</span>
+          <div className="flex justify-center">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl">
+              {displayServices.map((service, index) => (
+                <Card key={service.id} className="hover:shadow-xl transition-all duration-300 border-0 overflow-hidden group w-full max-w-sm">
+                  <div className={`h-2 bg-gradient-to-r ${serviceGradients[index % serviceGradients.length]}`}></div>
+                  <CardContent className="p-8">
+                    <div className="text-5xl mb-6 group-hover:scale-110 transition-transform duration-300">
+                      {serviceIcons[index % serviceIcons.length]}
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-500">Thời gian:</span>
-                      <span className="text-sm font-medium">{service.duration}</span>
+                    <h3 className="text-xl font-semibold mb-3">{service.name}</h3>
+                    <p className="text-gray-600 mb-6 leading-relaxed">{service.description}</p>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-500">Giá từ:</span>
+                        <span className="font-semibold text-blue-600">{formatPrice(service.basePrice)}</span>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* How it works */}
-      <section className="py-20 px-4 bg-white">
+      <section className="py-20 px-4 bg-gradient-to-br from-blue-50 to-purple-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
@@ -367,7 +430,7 @@ export default function HomePage() {
               asChild
               variant="outline"
               size="lg"
-              className="border-2 border-white text-white hover:bg-white hover:text-blue-600 text-lg px-10 py-6 rounded-full transition-all duration-300"
+              className="border-2 border-white text-blue-500 hover:bg-white hover:text-blue-800 text-lg px-10 py-6 rounded-full transition-all duration-300"
             >
               <Link href="/register">
                 <Users className="w-5 h-5 mr-2" />
@@ -377,7 +440,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
       <Footer />
     </div>
   )

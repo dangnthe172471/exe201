@@ -670,7 +670,7 @@ export default function AdminNewsPage() {
                                 )}
                                 <div>
                                     <h4 className="font-semibold text-sm text-gray-600">Nội dung</h4>
-                                    <div className="text-sm whitespace-pre-wrap">{selectedArticle?.content}</div>
+                                    <div className="text-sm whitespace-pre-line">{selectedArticle?.content}</div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>

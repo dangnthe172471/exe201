@@ -202,10 +202,9 @@ export default function NewsDetailPage() {
 
               {/* Article Content */}
               {article.content && (
-                <div
-                  className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-p:leading-relaxed prose-strong:text-gray-900"
-                  dangerouslySetInnerHTML={{ __html: article.content }}
-                />
+                <div className="text-base whitespace-pre-line text-gray-800">
+                  {article.content}
+                </div>
               )}
 
               {!article.content && article.excerpt && (

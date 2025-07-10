@@ -76,10 +76,11 @@ export const newsApi = {
         if (category) params.append('category', category);
         if (tag) params.append('tag', tag);
 
-        const response = await fetch(`${API_BASE_URL}/news?${params}`, {
+        const response = await fetch(`${API_BASE_URL}/api/news?${params}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
+                "ngrok-skip-browser-warning": "true",
             },
         });
 
@@ -91,10 +92,11 @@ export const newsApi = {
     },
 
     getFeaturedArticles: async (): Promise<NewsArticleDto[]> => {
-        const response = await fetch(`${API_BASE_URL}/news/featured`, {
+        const response = await fetch(`${API_BASE_URL}/api/news/featured`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
+                "ngrok-skip-browser-warning": "true",
             },
         });
 
@@ -106,10 +108,11 @@ export const newsApi = {
     },
 
     getCategories: async (): Promise<NewsCategoryDto[]> => {
-        const response = await fetch(`${API_BASE_URL}/news/categories`, {
+        const response = await fetch(`${API_BASE_URL}/api/news/categories`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
+                "ngrok-skip-browser-warning": "true",
             },
         });
 
@@ -121,10 +124,11 @@ export const newsApi = {
     },
 
     getTags: async (): Promise<NewsTagDto[]> => {
-        const response = await fetch(`${API_BASE_URL}/news/tags`, {
+        const response = await fetch(`${API_BASE_URL}/api/news/tags`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
+                "ngrok-skip-browser-warning": "true",
             },
         });
 
@@ -136,10 +140,11 @@ export const newsApi = {
     },
 
     getArticleById: async (idOrSlug: string): Promise<NewsArticleDetailDto> => {
-        const response = await fetch(`${API_BASE_URL}/news/${idOrSlug}`, {
+        const response = await fetch(`${API_BASE_URL}/api/news/${idOrSlug}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
+                "ngrok-skip-browser-warning": "true",
             },
         });
 
@@ -155,11 +160,12 @@ export const newsApi = {
 
     // Admin APIs
     createArticle: async (token: string, data: CreateNewsArticleDto): Promise<NewsArticleDetailDto> => {
-        const response = await fetch(`${API_BASE_URL}/news`, {
+        const response = await fetch(`${API_BASE_URL}/api/news`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
+                "ngrok-skip-browser-warning": "true",
             },
             body: JSON.stringify(data),
         });
@@ -175,11 +181,12 @@ export const newsApi = {
     },
 
     updateArticle: async (token: string, id: number, data: UpdateNewsArticleDto): Promise<NewsArticleDetailDto> => {
-        const response = await fetch(`${API_BASE_URL}/news/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/news/${id}`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
+                "ngrok-skip-browser-warning": "true",
             },
             body: JSON.stringify(data),
         });
@@ -198,11 +205,12 @@ export const newsApi = {
     },
 
     deleteArticle: async (token: string, id: number): Promise<void> => {
-        const response = await fetch(`${API_BASE_URL}/news/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/news/${id}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
+                "ngrok-skip-browser-warning": "true",
             },
         });
 

@@ -93,7 +93,7 @@ export default function Footer() {
                 <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
                   <Phone className="w-4 h-4" />
                 </div>
-                <span>1900 1234</span>
+                <span>0962 900 476</span>
               </div>
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center">
@@ -105,14 +105,14 @@ export default function Footer() {
                 <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
                   <MapPin className="w-4 h-4" />
                 </div>
-                <span>123 Nguyễn Văn Linh, Q.7, TP.HCM</span>
+                <span>Thôn 1, Thạch Hòa, Thạch Thất, Hà Nội</span>
               </div>
             </div>
           </div>
         </div>
 
         <div className="border-t border-gray-700 mt-12 pt-8 text-center text-gray-400">
-          <p>&copy; 2024 CareU. Tất cả quyền được bảo lưu. Made with ❤️ in Vietnam</p>
+          <p>&copy; 2025 CareU. Tất cả quyền được bảo lưu. Made with ❤️ in Vietnam</p>
         </div>
       </div>
     </footer>

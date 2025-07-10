@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/dialog"
 import Header from "@/components/header"
 import Link from "next/link"
+import { formatPhoneNumber } from "@/lib/utils"
 
 export default function AdminDashboardPage() {
     const router = useRouter()
@@ -63,6 +64,10 @@ export default function AdminDashboardPage() {
     const [selectedBooking, setSelectedBooking] = useState<BookingDto | null>(null)
     const [isBookingDetailModalOpen, setIsBookingDetailModalOpen] = useState(false)
     const [isLoadingBookingDetail, setIsLoadingBookingDetail] = useState(false)
+
+    // State cho tổng số đơn hàng và tổng số trang
+    const [totalBookings, setTotalBookings] = useState(0)
+    const [totalPages, setTotalPages] = useState(1)
 
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -116,6 +121,8 @@ export default function AdminDashboardPage() {
         try {
             const result = await adminApi.getAllBookings(token, currentPage, pageSize, searchTerm, statusFilter === 'all' ? undefined : statusFilter)
             setBookings(result.bookings)
+            setTotalBookings(result.totalCount)
+            setTotalPages(result.totalPages)
         } catch (err) {
             console.error('Error fetching bookings:', err)
         }
@@ -319,7 +326,7 @@ export default function AdminDashboardPage() {
                             <CardContent>
                                 <div className="text-2xl font-bold text-orange-600">{stats.totalBookings}</div>
                                 <p className="text-xs text-gray-600">
-                                    {stats.recentBookings} đơn hàng mới (7 ngày qua)
+                                    {stats.recentBookings} đơn hàng mới
                                 </p>
                             </CardContent>
                         </Card>
@@ -334,7 +341,7 @@ export default function AdminDashboardPage() {
                                     {stats.totalRevenue.toLocaleString('vi-VN')} VNĐ
                                 </div>
                                 <p className="text-xs text-gray-600">
-                                    {stats.recentRevenue.toLocaleString('vi-VN')} VNĐ (7 ngày qua)
+                                    {stats.recentRevenue.toLocaleString('vi-VN')} VNĐ
                                 </p>
                             </CardContent>
                         </Card>
@@ -475,6 +482,30 @@ export default function AdminDashboardPage() {
                                             )}
                                         </TableBody>
                                     </Table>
+                                    {/* PHÂN TRANG */}
+                                    {bookings && bookings.length > 0 && (
+                                        <div className="flex justify-end items-center mt-4 gap-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                                                disabled={currentPage === 1}
+                                            >
+                                                Trước
+                                            </Button>
+                                            <span className="mx-2 text-sm">
+                                                Trang {currentPage} / {totalPages}
+                                            </span>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                                                disabled={currentPage === totalPages || totalPages === 0}
+                                            >
+                                                Sau
+                                            </Button>
+                                        </div>
+                                    )}
                                 </CardContent>
                             </Card>
                         </TabsContent>
@@ -494,7 +525,6 @@ export default function AdminDashboardPage() {
                                                 <TableHead>Email</TableHead>
                                                 <TableHead>Số điện thoại</TableHead>
                                                 <TableHead>Trạng thái</TableHead>
-                                                <TableHead>Ngày tạo</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -503,14 +533,13 @@ export default function AdminDashboardPage() {
                                                     <TableCell>#{customer.id}</TableCell>
                                                     <TableCell>{customer.name}</TableCell>
                                                     <TableCell>{customer.email}</TableCell>
-                                                    <TableCell>{customer.phone}</TableCell>
+                                                    <TableCell>{formatPhoneNumber(customer.phone)}</TableCell>
                                                     <TableCell>
                                                         <Badge variant={customer.status === 'active' ? 'default' : 'secondary'}>
                                                             {customer.status === 'active' ? 'Hoạt động' :
                                                                 customer.status === 'inactive' ? 'Không hoạt động' : customer.status}
                                                         </Badge>
                                                     </TableCell>
-                                                    <TableCell>{new Date(customer.createdAt).toLocaleDateString('vi-VN')}</TableCell>
                                                 </TableRow>
                                             )) : (
                                                 <TableRow>
@@ -550,7 +579,7 @@ export default function AdminDashboardPage() {
                                                     <TableCell>#{cleaner.id}</TableCell>
                                                     <TableCell>{cleaner.name}</TableCell>
                                                     <TableCell>{cleaner.email}</TableCell>
-                                                    <TableCell>{cleaner.phone}</TableCell>
+                                                    <TableCell>{formatPhoneNumber(cleaner.phone)}</TableCell>
                                                     <TableCell>
                                                         <Badge variant={cleaner.status === 'active' ? 'default' : 'secondary'}>
                                                             {cleaner.status === 'active' ? 'Hoạt động' :
@@ -675,7 +704,7 @@ export default function AdminDashboardPage() {
                                                 <h4 className="font-semibold text-sm text-gray-600">Thông tin khách hàng</h4>
                                                 <p className="text-sm">Tên: {selectedBooking.userName}</p>
                                                 <p className="text-sm">Liên hệ: {selectedBooking.contactName}</p>
-                                                <p className="text-sm">SĐT: {selectedBooking.contactPhone}</p>
+                                                <p className="text-sm">SĐT: {formatPhoneNumber(selectedBooking.contactPhone)}</p>
                                             </div>
                                             <div>
                                                 <h4 className="font-semibold text-sm text-gray-600">Thông tin dịch vụ</h4>

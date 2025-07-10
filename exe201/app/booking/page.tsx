@@ -458,7 +458,7 @@ export default function BookingPage() {
                       placeholder="Số nhà, tên đường, tòa nhà..."
                       value={formData.detailedAddress}
                       onChange={(e) => handleDetailedAddressChange(e.target.value)}
-                      className="h-12 border-gray-300 focus:border-blue-500"
+                      className="h-12 border-gray-300 focus:border-blue-500" required
                     />
                   </div>
 
