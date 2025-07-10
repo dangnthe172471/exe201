@@ -1,11 +1,11 @@
 using Exe201_API.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Exe201_API.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,15 +17,15 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "Exe201_API", Version = "v1" });
-    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
                Name = "Authorization",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
         Scheme = "bearer",
         BearerFormat = "JWT"
     });
-    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
             new OpenApiSecurityScheme
@@ -40,7 +40,7 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
     // Tell Swagger to map DateOnly to a string in 'date' format
-    c.MapType<DateOnly>(() => new Microsoft.OpenApi.Models.OpenApiSchema
+    c.MapType<DateOnly>(() => new OpenApiSchema
     {
         Type = "string",
         Format = "date"
@@ -105,23 +105,26 @@ builder.Services.AddScoped<IReviewService, ReviewService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+	c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+	c.RoutePrefix = "swagger";
+});
 
 builder.Services.AddCors();
 
 app.UseCors(options =>
 {
-    options.AllowAnyHeader();
-    options.AllowAnyMethod();
-    options.AllowAnyOrigin();
+	options.AllowAnyHeader();
+	options.AllowAnyMethod();
+	options.AllowAnyOrigin();
 });
 
-app.UseHttpsRedirection();
+if (app.Environment.IsDevelopment())
+{
+	app.UseHttpsRedirection();
+}
 
 app.UseAuthentication();
 app.UseAuthorization();
